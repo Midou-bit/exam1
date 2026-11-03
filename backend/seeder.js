@@ -1,17 +1,10 @@
-// backend/seeder.js
+// backend/seeder.js : insère les produits de démo et le compte admin (idempotent, relançable sans risque)
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const Product = require('./models/Product'); // Assurez-vous que le chemin est correct
-
-dotenv.config();
-
-// Connexion à MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log('MongoDB connecté pour le seed'))
-  .catch((err) => console.error('Erreur de connexion à MongoDB', err));
+const Product = require('./models/Product');
+const User = require('./models/User');
+const { logger } = require('./logger');
 
 // Jeux de produits à insérer
 const products = [
@@ -47,22 +40,46 @@ const products = [
   },
 ];
 
-// Fonction pour insérer les produits
+// Produits : insertion uniquement s'ils n'existent pas (clé = nom), pas de doublon ni d'écrasement
 const seedProducts = async () => {
+  let inserted = 0;
+  for (const { name, ...rest } of products) {
+    const result = await Product.updateOne({ name }, { $setOnInsert: rest }, { upsert: true });
+    inserted += result.upsertedCount;
+  }
+  logger.info('Produits vérifiés', { inserted, total: products.length });
+};
+
+// Admin : créé depuis ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD, uniquement s'il n'existe pas
+const seedAdmin = async () => {
+  const { ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
+  if (!ADMIN_USERNAME || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+    logger.warn('Variables ADMIN_* absentes : compte admin non créé');
+    return;
+  }
+  const existing = await User.findOne({ $or: [{ username: ADMIN_USERNAME }, { email: ADMIN_EMAIL }] });
+  if (existing) {
+    logger.info('Compte admin déjà présent, aucune création', { username: existing.username });
+    return;
+  }
+  // Le hook pre('save') du modèle User hashe le mot de passe
+  await new User({ username: ADMIN_USERNAME, email: ADMIN_EMAIL, password: ADMIN_PASSWORD, role: 'admin' }).save();
+  logger.info('Compte admin créé', { username: ADMIN_USERNAME });
+};
+
+const seed = async () => {
   try {
-    // Supprimer les anciens produits (optionnel)
-    await Product.deleteMany();
-
-    // Insérer les nouveaux produits
-    await Product.insertMany(products);
-
-    console.log('Jeux de produits insérés avec succès !');
-    process.exit();
+    await mongoose.connect(process.env.MONGO_URI);
+    logger.info('MongoDB connecté pour le seed');
+    await seedProducts();
+    await seedAdmin();
   } catch (error) {
-    console.error('Erreur lors de l\'insertion des produits', error);
-    process.exit(1);
+    logger.error('Erreur lors du seed', { error: error.message });
+    process.exitCode = 1;
+  } finally {
+    await mongoose.disconnect();
   }
 };
 
 // Lancer le seed
-seedProducts();
+seed();
