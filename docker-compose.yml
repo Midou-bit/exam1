@@ -1,32 +1,117 @@
-version: '3'
+# Stack complète en local (équivalent de l'architecture déployée sur Render)
+# Secrets : fichiers .env de chaque service (facultatifs, voir les .env.example)
+# Les variables "environment" surchargent celles des env_file pour le réseau Docker.
+
 services:
-  frontend:
-    build: ./frontend
+  mongo:
+    image: mongo:7
     ports:
-      - '3000:3000'
+      - '27018:27017'
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  notifications:
+    build: ./microservices/notifications
+    ports:
+      - '4002:4002'
+    env_file:
+      - path: ./microservices/notifications/.env
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: 4002
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4002/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  stock-management:
+    build: ./microservices/stock-management
+    ports:
+      - '4003:4003'
+    environment:
+      NODE_ENV: production
+      PORT: 4003
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4003/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  gateway:
+    build: ./gateway
+    ports:
+      - '8000:8000'
+    env_file:
+      - path: ./gateway/.env
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: 8000
+      NOTIFI_SERVICE_URL: http://notifications:4002
+      STOCK_SERVICE_URL: http://stock-management:4003
     depends_on:
-      - backend
+      notifications:
+        condition: service_healthy
+      stock-management:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   backend:
     build: ./backend
     ports:
       - '5000:5000'
+    env_file:
+      - path: ./backend/.env
+        required: false
     environment:
-      - MONGO_URI=mongodb://mongo:27017/mydatabase
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongo:27017/mydatabase
+      GATEWAY_URL: http://gateway:8000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
-  mongo:
-    image: mongo
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # URL vue par le navigateur de l'utilisateur, donc celle publiée sur l'hôte
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:5000/api}
     ports:
-      - '27018:27017'
+      - '3000:80'
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
-  notifications:
-    build: ./microservices/notifications
-    ports:
-      - '3001:3001'
-
-  stock-management:
-    build: ./microservices/stock-management
-    ports:
-      - '3002:3002'
+volumes:
+  mongo-data:
