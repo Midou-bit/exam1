@@ -15,10 +15,12 @@ exports.login = async (req, res, next) => {
 
   try {
     const user = await User.findOne({ username });
-    if (!user) return res.status(400).json({ message: 'Utilisateur non trouvé' });
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Mot de passe incorrect' });
+    // SEC-07 : même réponse pour un utilisateur inconnu et un mauvais mot de passe
+    const isMatch = user ? await bcrypt.compare(password, user.password) : false;
+    if (!isMatch) {
+      logger.warn('Échec de connexion', { username, ip: req.ip });
+      return res.status(401).json({ message: 'Identifiants invalides' });
+    }
 
     const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     logger.info('Connexion réussie', { username: user.username });
