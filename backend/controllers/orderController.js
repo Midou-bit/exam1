@@ -217,9 +217,18 @@ exports.getOrders = async(req, res)=>{
  
 }
 
+// BUG-06 : la validation écrit réellement un statut de l'enum
 exports.validateOrder = async (req, res) => {
-  const { orderId } = req.body;
-  res.status(200).json({message: `Commande ${orderId} validée avec succès.`})
+  const { id } = req.params;
+  const order = await Order.findByIdAndUpdate(
+    id,
+    { status: 'En cours de traitement', updatedAt: new Date() },
+    { new: true, runValidators: true }
+  );
+  if (!order) {
+    return res.status(404).json({ message: "Commande non trouvée." });
+  }
+  res.status(200).json({ message: `Commande ${id} validée avec succès.`, order });
 }
 
 exports.updateOrderStatus = async (req, res, next) => {
