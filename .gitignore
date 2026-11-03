@@ -17,6 +17,7 @@ logs/
 
 # Environnement Python (scripts de supervision)
 .venv/
+__pycache__/
 
 # IDE
 .vscode/
