@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environnement
+.env
+*.env*
+!.env.example
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Build
+dist/
+build/
+*.exe
+
+# MongoDB
+data/db/
+
+# Autre
+.DS_Store

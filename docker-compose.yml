@@ -1,0 +1,32 @@
+version: '3'
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    ports:
+      - '5000:5000'
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/mydatabase
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo
+    ports:
+      - '27018:27017'
+
+  notifications:
+    build: ./microservices/notifications
+    ports:
+      - '3001:3001'
+
+  stock-management:
+    build: ./microservices/stock-management
+    ports:
+      - '3002:3002'
