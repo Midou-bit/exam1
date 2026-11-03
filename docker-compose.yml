@@ -6,8 +6,9 @@ services:
   mongo:
     image: mongo:7
     restart: unless-stopped
+    # SEC-10 : port publié uniquement sur la machine locale (pas sur le réseau)
     ports:
-      - '27018:27017'
+      - '127.0.0.1:27018:27017'
     volumes:
       - mongo-data:/data/db
     healthcheck:
