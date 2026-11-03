@@ -22,6 +22,7 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     try {
       await axios.post(`${API_URL}/auth/register`, formData);
       alert('Inscription réussie ! Vous pouvez maintenant vous connecter.');
@@ -31,11 +32,12 @@ const Register = () => {
       if (err.response) {
         // Erreur renvoyée par le serveur
         const { message } = err.response.data;
-        alert(message); // Affiche un message à l'utilisateur (vous pouvez remplacer par un toast)
+        // Message affiché dans le formulaire (au lieu d'une alerte)
+        setError(message || 'Une erreur est survenue lors de la création du compte.');
       } else {
         // Erreur réseau ou autre
         console.error("Erreur réseau ou serveur", err);
-        alert("Une erreur est survenue. Veuillez réessayer.");
+        setError("Une erreur est survenue. Veuillez réessayer.");
       }
       //setError('Une erreur est survenue lors de la création du compte.');
     }
