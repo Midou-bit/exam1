@@ -1,17 +1,16 @@
 // backend/middlewares/authMiddleware.js
 const jwt = require('jsonwebtoken');
+const { logger } = require('../logger');
 
 exports.authenticateToken = (req, res, next) => {
 
   const token = req.headers['authorization']?.split(' ')[1];
-  console.log(`token is ${token}`)
-  //return res.status(401).json({ message: 'Accès interdits', token:token });
   if (!token) return res.sendStatus(401);
 
   try {
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
       if (err) {
-        console.error('Erreur de vérification du token upd');
+        logger.warn('Token JWT invalide', { ip: req.ip, url: req.originalUrl });
         return res.status(403).json({ error: true, message: 'Token invalide upd' });
       }
       req.user = user;

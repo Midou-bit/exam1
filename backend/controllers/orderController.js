@@ -2,14 +2,19 @@
 const axios = require('axios');
 const Order = require('../models/Order');
 const orderLog = require('debug')('orderRoutes:console')
+const { logger } = require('../logger');
+
+// URL de la gateway et destinataire des notifications (variables d'environnement)
+const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8000';
+const NOTIFY_ADMIN_EMAIL = process.env.NOTIFY_ADMIN_EMAIL;
 
 
 exports.createOrder = async (req, res) => {
   //userLog(`user is ${JSON.stringify(req.user)}`)
-  console.log(`user is in createOrder ${JSON.stringify(req.user)}`)
+  logger.debug('createOrder', { userId: req.user.userId })
   //const { items, shippingAddress, paymentMethod } = req.body;
   const { items, shippingAddress, paymentMethod, shippingMethod, } = req.body;
-  console.log(`items are ${JSON.stringify(req.body)}`)
+  logger.debug('Contenu de la commande', { items: req.body.items })
   //const { items } = req.body;
   let userId = req.user.userId;
   // let shippingAddress = {
@@ -32,7 +37,7 @@ exports.createOrder = async (req, res) => {
   try {
     // Logique pour préparer les détails de la commande
     const orderDetails = items.map(({ productId, quantity, price }) => {
-      console.log(`Produit ID : ${productId}, Quantité : ${quantity}, Price ${price}`);
+      logger.debug('Article de commande', { productId, quantity, price });
       return { productId, quantity, price };
     });
 
@@ -54,26 +59,26 @@ exports.createOrder = async (req, res) => {
     // Sauvegarder la commande dans la base de données
     const savedOrder = await newOrder.save();
 
-    console.log('Commande sauvegardée :', savedOrder);
+    logger.info('Commande sauvegardée', { orderId: savedOrder._id, total: savedOrder.total });
 
     // Appel au micro-service de notification
     try {
-      await axios.post('http://localhost:8000/notify', {
-        to: 'syaob@yahoo.fr',
+      await axios.post(`${GATEWAY_URL}/notify`, {
+        to: NOTIFY_ADMIN_EMAIL,
         subject: 'Nouvelle Commande Créée',
         text: `Une commande a été créée avec succès pour les produits suivants : \n${orderDetails
           .map((item) => `Produit ID : ${item.productId}, Quantité : ${item.quantity}`)
           .join('\n')}`,
       });
     } catch (error) {
-      console.error('Erreur lors de l\'envoi de la notification', error);
+      logger.warn('Erreur lors de l\'envoi de la notification', { error: error.message });
     }
 
     // Appel au micro-service de gestion des stocks
     // try {
     //   await Promise.all(
     //     items.map(({ productId, quantity }) =>
-    //       axios.post('http://localhost:8000/update-stock', { productId, quantity })
+    //       axios.post(`${GATEWAY_URL}/update-stock`, { productId, quantity })
     //     )
     //   );
     // } catch (error) {
@@ -86,7 +91,7 @@ exports.createOrder = async (req, res) => {
       order: savedOrder,
     });
   } catch (error) {
-    console.error('Erreur lors de la création de la commande', error);
+    logger.error('Erreur lors de la création de la commande', { error: error.message });
     res.status(500).json({
       message: 'Une erreur est survenue lors de la création de la commande.',
     });
@@ -114,8 +119,8 @@ exports.createOrder = async (req, res) => {
   
 //     //   // Appel au micro-service de notification
 //       try {
-//         await axios.post('http://localhost:8000/notify', {
-//           to: "syaob@yahoo.fr",
+//         await axios.post(`${GATEWAY_URL}/notify`, {
+//           to: NOTIFY_ADMIN_EMAIL,
 //           subject: 'Nouvelle Commande Créée',
 //           text: `Une commande a été créée avec succès pour les produits suivants : \n${orderDetails
 //             .map((item) => `Produit ID : ${item.productId}, Quantité : ${item.quantity}`)
@@ -129,7 +134,7 @@ exports.createOrder = async (req, res) => {
 //       try {
 //         await Promise.all(
 //           products.items.map(({ productId, quantity }) =>
-//             axios.post('http://localhost:8000/update-stock', { productId, quantity })
+//             axios.post(`${GATEWAY_URL}/update-stock`, { productId, quantity })
 //           )
 //         );
 //       } catch (error) {
@@ -149,7 +154,7 @@ exports.createOrder = async (req, res) => {
 
 exports.deleteOrder = async(req, res)=>{
     const { orderId } = req.body;
-    console.log(`orderId to delete is ${orderId}`)
+    logger.info('Demande de suppression de commande', { orderId })
 }
 
 exports.getOrders = async(req, res)=>{
@@ -168,7 +173,7 @@ exports.updateOrderStatus = async (req, res) => {
   const { orderId } = req.params;
   const { status } = req.body;
 
-  console.log(`dump console log order id => ${orderId} status = ${status}`);
+  logger.info('Mise à jour du statut de commande', { orderId, status });
   try {
     // Vérification des données
     if (!status) {
@@ -188,7 +193,7 @@ exports.updateOrderStatus = async (req, res) => {
 
     res.status(200).json({ message: "Statut mis à jour avec succès", order });
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de la commande :", error);
+    logger.error('Erreur lors de la mise à jour de la commande', { error: error.message });
     res.status(500).json({ message: "Erreur serveur." });
   }
 };

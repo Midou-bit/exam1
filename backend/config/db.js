@@ -1,17 +1,15 @@
 // config/db.js
 const mongoose = require('mongoose');
 require('dotenv').config();
+const { logger } = require('../logger');
 
 const connectDB = async () => {
     try {
-        console.log(`url de la page dans les var env ${process.env.MONGO_URI}`);
-        await mongoose.connect(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
-        console.log('MongoDB connecté');
+        // Options useNewUrlParser / useUnifiedTopology obsolètes depuis Mongoose 6 ; l'URI (secrète) n'est jamais loggée
+        await mongoose.connect(process.env.MONGO_URI);
+        logger.info('MongoDB connecté');
     } catch (err) {
-        console.error(err.message);
+        logger.error('Échec de connexion à MongoDB', { error: err.message });
         process.exit(1);
     }
 };
