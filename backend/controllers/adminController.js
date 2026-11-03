@@ -1,4 +1,7 @@
 // backend/controllers/adminController.js
+/**
+ * @module backend/controllers/adminController
+ */
 const axios = require('axios');
 const Order = require('../models/Order'); // Modèle pour les commandes
 const Product = require('../models/Product'); // Modèle pour les produits
@@ -7,6 +10,12 @@ const Product = require('../models/Product'); // Modèle pour les produits
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8000';
 
 // Récupérer toutes les commandes
+/**
+ * @description Liste les commandes. Code non monté dans server.js (voir BUG-10 dans docs/AUDIT.md).
+ * @param {express.Request} req - Requête Express
+ * @param {express.Response} res - Réponse Express
+ * @returns {Promise<void>} 200 commandes ; 500 en cas d'erreur
+ */
 exports.getOrders = async (req, res) => {
   try {
     const orders = await Order.find();
@@ -17,6 +26,12 @@ exports.getOrders = async (req, res) => {
 };
 
 // Changer l'état d'une commande
+/**
+ * @description Change le statut d'une commande et notifie. Code non monté dans server.js (voir BUG-10 dans docs/AUDIT.md).
+ * @param {express.Request} req - Requête Express
+ * @param {express.Response} res - Réponse Express
+ * @returns {Promise<void>} 200 ; 500 en cas d'erreur
+ */
 exports.updateOrderStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -33,6 +48,12 @@ exports.updateOrderStatus = async (req, res) => {
 };
 
 // Valider une commande
+/**
+ * @description Valide une commande et notifie. Code non monté dans server.js (voir BUG-10 dans docs/AUDIT.md).
+ * @param {express.Request} req - Requête Express
+ * @param {express.Response} res - Réponse Express
+ * @returns {Promise<void>} 200 ; 500 en cas d'erreur
+ */
 exports.validateOrder = async (req, res) => {
   const { id } = req.params;
 
@@ -48,6 +69,12 @@ exports.validateOrder = async (req, res) => {
 };
 
 // Récupérer tous les produits
+/**
+ * @description Liste les produits. Code non monté dans server.js (voir BUG-10 dans docs/AUDIT.md).
+ * @param {express.Request} req - Requête Express
+ * @param {express.Response} res - Réponse Express
+ * @returns {Promise<void>} 200 produits ; 500 en cas d'erreur
+ */
 exports.getProducts = async (req, res) => {
   try {
     const products = await Product.find();
@@ -58,6 +85,12 @@ exports.getProducts = async (req, res) => {
 };
 
 // Mettre à jour le stock d'un produit
+/**
+ * @description Met à jour un stock et notifie. Code non monté dans server.js (voir BUG-10 dans docs/AUDIT.md).
+ * @param {express.Request} req - Requête Express
+ * @param {express.Response} res - Réponse Express
+ * @returns {Promise<void>} 200 ; 500 en cas d'erreur
+ */
 exports.updateProductStock = async (req, res) => {
   const { id } = req.params;
   const { stock } = req.body;

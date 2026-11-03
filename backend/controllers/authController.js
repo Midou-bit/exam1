@@ -1,4 +1,7 @@
 // backend/controllers/authController.js
+/**
+ * @module backend/controllers/authController
+ */
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User'); // modèle utilisateur
@@ -7,6 +10,15 @@ const axios = require('axios');
 const { logger } = require('../logger');
 //const sendEmail = require('../services/emailService');
 
+/**
+ * @description Authentifie un utilisateur et renvoie un JWT valable 1 h.
+ * @route POST /api/auth/login
+ * @param {express.Request} req - Requête Express (corps validé : username, password)
+ * @param {express.Response} res - Réponse Express
+ * @param {express.NextFunction} next - Passe l'erreur au middleware d'erreur global
+ * @returns {Promise<void>} 200 { token, role, username } ; 401 « Identifiants invalides »
+ * @throws {Error} Erreur base de données, transmise à next (503 / 500)
+ */
 exports.login = async (req, res, next) => {
   const { username, password } = req.body;
   // Jamais de mot de passe ni de token dans les logs
@@ -33,6 +45,15 @@ exports.login = async (req, res, next) => {
 };
 
 
+/**
+ * @description Crée un compte utilisateur (rôle user), mot de passe hashé par le modèle User.
+ * @route POST /api/auth/register
+ * @param {express.Request} req - Requête Express (corps validé : username, email, password)
+ * @param {express.Response} res - Réponse Express
+ * @param {express.NextFunction} next - Passe l'erreur au middleware d'erreur global
+ * @returns {Promise<void>} 201 si créé ; 409 si l'email ou le username existe déjà
+ * @throws {Error} Erreur base de données, transmise à next
+ */
 exports.register = async (req, res, next) => {
   const { username, email, password } = req.body;
   logger.debug('Tentative d\'inscription', { username });

@@ -1,4 +1,7 @@
 // backend/controllers/orderController.js
+/**
+ * @module backend/controllers/orderController
+ */
 const axios = require('axios');
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
@@ -13,11 +16,25 @@ const NOTIFY_ADMIN_EMAIL = process.env.NOTIFY_ADMIN_EMAIL;
 const INTERNAL_HEADERS = { 'x-internal-key': process.env.INTERNAL_API_KEY || '' };
 
 // BUG-03 : remet en stock les quantités déjà décrémentées (échec en cours de commande)
+/**
+ * @description Remet en stock les quantités déjà décrémentées (annulation d'une commande en échec).
+ * @param {Array<{productId: string, quantity: number}>} items - Articles à remettre en stock
+ * @returns {Promise<Array>} Résultats des mises à jour
+ */
 const restoreStock = (items) => Promise.all(
   items.map(({ productId, quantity }) => Product.updateOne({ _id: productId }, { $inc: { stock: quantity } }))
 );
 
 
+/**
+ * @description Crée une commande : prix relus en base, total recalculé, stock décrémenté de façon atomique, notification via la gateway.
+ * @route POST /api/orders
+ * @param {express.Request} req - Requête Express (req.user issu du JWT, corps validé par createOrderSchema)
+ * @param {express.Response} res - Réponse Express
+ * @param {express.NextFunction} next - Passe l'erreur au middleware d'erreur global
+ * @returns {Promise<void>} 201 { message, order } ; 400 produit inconnu ou quantité invalide ; 409 stock insuffisant
+ * @throws {Error} Erreur base de données (stock rétabli), transmise à next
+ */
 exports.createOrder = async (req, res, next) => {
   //userLog(`user is ${JSON.stringify(req.user)}`)
   logger.debug('createOrder', { userId: req.user.userId })
@@ -200,6 +217,14 @@ exports.createOrder = async (req, res, next) => {
 //   };
 
 // BUG-04 : suppression réelle de la commande (identifiant dans l'URL), toujours une réponse
+/**
+ * @description Supprime une commande (administrateur).
+ * @route DELETE /api/orders/:id
+ * @param {express.Request} req - Requête Express
+ * @param {express.Response} res - Réponse Express
+ * @returns {Promise<void>} 200 si supprimée ; 404 si absente
+ * @throws {Error} Erreur base de données (via asyncHandler)
+ */
 exports.deleteOrder = async(req, res)=>{
     const { id } = req.params;
     const order = await Order.findByIdAndDelete(id);
@@ -210,6 +235,14 @@ exports.deleteOrder = async(req, res)=>{
     res.status(200).json({ message: `Commande ${id} supprimée.` });
 }
 
+/**
+ * @description Liste toutes les commandes (administrateur).
+ * @route GET /api/orders
+ * @param {express.Request} req - Requête Express
+ * @param {express.Response} res - Réponse Express
+ * @returns {Promise<void>} 200 tableau de commandes
+ * @throws {Error} Erreur base de données (via asyncHandler)
+ */
 exports.getOrders = async(req, res)=>{
 
   const orders = await Order.find();
@@ -218,6 +251,14 @@ exports.getOrders = async(req, res)=>{
 }
 
 // BUG-06 : la validation écrit réellement un statut de l'enum
+/**
+ * @description Valide une commande : statut « En cours de traitement ».
+ * @route PUT /api/orders/:id/validate
+ * @param {express.Request} req - Requête Express
+ * @param {express.Response} res - Réponse Express
+ * @returns {Promise<void>} 200 { message, order } ; 404 si absente
+ * @throws {Error} Erreur base de données (via asyncHandler)
+ */
 exports.validateOrder = async (req, res) => {
   const { id } = req.params;
   const order = await Order.findByIdAndUpdate(
@@ -231,6 +272,15 @@ exports.validateOrder = async (req, res) => {
   res.status(200).json({ message: `Commande ${id} validée avec succès.`, order });
 }
 
+/**
+ * @description Change le statut d'une commande (valeurs de l'enum uniquement).
+ * @route PUT /api/orders/:orderId/status
+ * @param {express.Request} req - Requête Express (corps validé : status)
+ * @param {express.Response} res - Réponse Express
+ * @param {express.NextFunction} next - Passe l'erreur au middleware d'erreur global
+ * @returns {Promise<void>} 200 { message, order } ; 404 si absente
+ * @throws {Error} Erreur base de données, transmise à next
+ */
 exports.updateOrderStatus = async (req, res, next) => {
   const { orderId } = req.params;
   const { status } = req.body;

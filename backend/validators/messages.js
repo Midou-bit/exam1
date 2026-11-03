@@ -1,4 +1,11 @@
 // validators/messages.js : messages d'erreur Joi en français
+/**
+ * @module backend/validators/messages
+ */
+/**
+ * @description Messages d'erreur Joi en français, indexés par code d'erreur.
+ * @type {Object<string, string>}
+ */
 module.exports = {
   'any.required': '{#label} est obligatoire',
   'any.only': '{#label} doit être l\'une des valeurs : {#valids}',

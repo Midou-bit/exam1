@@ -1,3 +1,6 @@
+/**
+ * @module microservices/stock-management
+ */
 const express = require('express');
 const { logger, httpLogger } = require('./logger');
 const internalAuth = require('./internalAuth');
@@ -11,6 +14,13 @@ app.use(httpLogger);
 app.use(express.json());
 
 // Sonde de santé (Uptime Kuma, health check Render)
+/**
+ * @description Sonde de santé de stock-management (Render, Uptime Kuma).
+ * @route GET /health
+ * @param {express.Request} req - Requête Express
+ * @param {express.Response} res - Réponse Express
+ * @returns {void} 200 { status, service, env, appEnv, uptime }
+ */
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'stock-management', env: process.env.NODE_ENV || 'development', appEnv: process.env.APP_ENV || 'local', uptime: process.uptime() });
 });
@@ -18,6 +28,13 @@ app.get('/health', (req, res) => {
 // SEC-02 : clé interne obligatoire (sauf /health)
 app.use(internalAuth);
 
+/**
+ * @description Reçoit une mise à jour de stock (journalisée).
+ * @route POST /update-stock
+ * @param {express.Request} req - Requête Express (corps : productId, quantity ; en-tête x-internal-key)
+ * @param {express.Response} res - Réponse Express
+ * @returns {void} 200 texte de confirmation
+ */
 app.post('/update-stock', (req, res) => {
     const { productId, quantity } = req.body;
     logger.info('Mise à jour du stock', { productId, quantity });

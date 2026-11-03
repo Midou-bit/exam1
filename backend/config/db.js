@@ -1,4 +1,7 @@
 // config/db.js
+/**
+ * @module backend/config/db
+ */
 const mongoose = require('mongoose');
 require('dotenv').config();
 const { logger } = require('../logger');
@@ -8,6 +11,10 @@ mongoose.set('bufferCommands', false);
 
 const RETRY_DELAY_MS = 5000;
 
+/**
+ * @description Connecte Mongoose à MONGO_URI ; en cas d'échec, journalise et retente toutes les 5 s sans arrêter le processus.
+ * @returns {Promise<void>}
+ */
 const connectDB = async () => {
     try {
         // Options useNewUrlParser / useUnifiedTopology obsolètes depuis Mongoose 6 ; l'URI (secrète) n'est jamais loggée

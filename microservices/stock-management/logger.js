@@ -1,4 +1,7 @@
 // logger.js : journalisation centralisée (Winston) + audit HTTP (morgan)
+/**
+ * @module microservices/stock-management/logger
+ */
 const fs = require('fs');
 const path = require('path');
 const winston = require('winston');
@@ -21,6 +24,10 @@ try {
   // Pas de fichier possible : on garde uniquement la console
 }
 
+/**
+ * @description Logger Winston : JSON horodaté, niveau LOG_LEVEL (défaut info), console + logs/error.log + logs/combined.log.
+ * @type {winston.Logger}
+ */
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
@@ -33,6 +40,10 @@ const logger = winston.createLogger({
 });
 
 // Audit HTTP : une entrée JSON par requête (méthode, URL, statut, durée, IP)
+/**
+ * @description Middleware d'audit HTTP (morgan) : une entrée JSON par requête (méthode, URL, statut, durée, IP) ; sondes /health réussies ignorées.
+ * @type {express.RequestHandler}
+ */
 const httpLogger = morgan(
   (tokens, req, res) => JSON.stringify({
     method: tokens.method(req, res),

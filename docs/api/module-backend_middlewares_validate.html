@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Module: backend/middlewares/validate</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Module: backend/middlewares/validate</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        
+            
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="module:backend/middlewares/validate"><span class="type-signature"></span>(require("backend/middlewares/validate"))<span class="signature">(schema, property<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {express.RequestHandler}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Fabrique un middleware de validation Joi ; les champs inconnus sont retirés.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>schema</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">joi.Schema</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Schéma Joi</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>property</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    body
+                
+                </td>
+            
+
+            <td class="description last"><p>Partie de la requête à valider</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="backend_middlewares_validate.js.html">backend/middlewares/validate.js</a>, <a href="backend_middlewares_validate.js.html#line13">line 13</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Middleware qui répond 400 avec un message lisible si la validation échoue</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">express.RequestHandler</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-backend_config_db.html">backend/config/db</a></li><li><a href="module-backend_controllers_adminController.html">backend/controllers/adminController</a></li><li><a href="module-backend_controllers_authController.html">backend/controllers/authController</a></li><li><a href="module-backend_controllers_orderController.html">backend/controllers/orderController</a></li><li><a href="module-backend_controllers_productController.html">backend/controllers/productController</a></li><li><a href="module-backend_logger.html">backend/logger</a></li><li><a href="module-backend_middlewares_authMiddleware.html">backend/middlewares/authMiddleware</a></li><li><a href="module-backend_middlewares_errorHandler.html">backend/middlewares/errorHandler</a></li><li><a href="module-backend_middlewares_rateLimiter.html">backend/middlewares/rateLimiter</a></li><li><a href="module-backend_middlewares_validate.html">backend/middlewares/validate</a></li><li><a href="module-backend_seeder.html">backend/seeder</a></li><li><a href="module-backend_validators_authValidators.html">backend/validators/authValidators</a></li><li><a href="module-backend_validators_messages.html">backend/validators/messages</a></li><li><a href="module-backend_validators_orderValidators.html">backend/validators/orderValidators</a></li><li><a href="module-backend_validators_productValidators.html">backend/validators/productValidators</a></li><li><a href="module-gateway_internalAuth.html">gateway/internalAuth</a></li><li><a href="module-gateway_logger.html">gateway/logger</a></li><li><a href="module-gateway_server.html">gateway/server</a></li><li><a href="module-microservices_notifications.html">microservices/notifications</a></li><li><a href="module-microservices_notifications_internalAuth.html">microservices/notifications/internalAuth</a></li><li><a href="module-microservices_notifications_logger.html">microservices/notifications/logger</a></li><li><a href="module-microservices_stock-management.html">microservices/stock-management</a></li><li><a href="module-microservices_stock-management_internalAuth.html">microservices/stock-management/internalAuth</a></li><li><a href="module-microservices_stock-management_logger.html">microservices/stock-management/logger</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a>
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

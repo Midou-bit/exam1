@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: backend/validators/orderValidators.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: backend/validators/orderValidators.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// validators/orderValidators.js : schémas d'entrée des commandes
+/**
+ * @module backend/validators/orderValidators
+ */
+const Joi = require('joi');
+const Order = require('../models/Order');
+
+// SEC-06 : seules les valeurs de l'enum du modèle sont acceptées
+const STATUSES = Order.schema.path('status').enumValues;
+
+/**
+ * @description Schéma du changement de statut : valeurs de l'enum du modèle Order.
+ * @type {joi.ObjectSchema}
+ */
+exports.statusSchema = Joi.object({
+  status: Joi.string().valid(...STATUSES).required().label('Le statut'),
+});
+
+// BUG-07 : création de commande (price et total ne sont pas acceptés, voir SEC-01)
+/**
+ * @description Champ d'adresse obligatoire (1 à 200 caractères).
+ * @param {string} label - Libellé affiché dans le message d'erreur
+ * @returns {joi.StringSchema}
+ */
+const addressField = (label) => Joi.string().trim().min(1).max(200).required().label(label);
+
+/**
+ * @description Schéma de création de commande (price et total refusés, recalculés par le serveur).
+ * @type {joi.ObjectSchema}
+ */
+exports.createOrderSchema = Joi.object({
+  items: Joi.array().min(1).required().label('La liste des articles').items(Joi.object({
+    productId: Joi.string().hex().length(24).required().label('L\'identifiant du produit'),
+    quantity: Joi.number().integer().min(1).required().label('La quantité'),
+  })),
+  shippingAddress: Joi.object({
+    street: addressField('La rue'),
+    city: addressField('La ville'),
+    postalCode: addressField('Le code postal'),
+    country: addressField('Le pays'),
+  }).required().label('L\'adresse de livraison'),
+  paymentMethod: Joi.string().valid(...Order.schema.path('paymentMethod').enumValues).required().label('Le mode de paiement'),
+  shippingMethod: Joi.string().valid(...Order.schema.path('shippingMethod').enumValues).required().label('La méthode de livraison'),
+});
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-backend_config_db.html">backend/config/db</a></li><li><a href="module-backend_controllers_adminController.html">backend/controllers/adminController</a></li><li><a href="module-backend_controllers_authController.html">backend/controllers/authController</a></li><li><a href="module-backend_controllers_orderController.html">backend/controllers/orderController</a></li><li><a href="module-backend_controllers_productController.html">backend/controllers/productController</a></li><li><a href="module-backend_logger.html">backend/logger</a></li><li><a href="module-backend_middlewares_authMiddleware.html">backend/middlewares/authMiddleware</a></li><li><a href="module-backend_middlewares_errorHandler.html">backend/middlewares/errorHandler</a></li><li><a href="module-backend_middlewares_rateLimiter.html">backend/middlewares/rateLimiter</a></li><li><a href="module-backend_middlewares_validate.html">backend/middlewares/validate</a></li><li><a href="module-backend_seeder.html">backend/seeder</a></li><li><a href="module-backend_validators_authValidators.html">backend/validators/authValidators</a></li><li><a href="module-backend_validators_messages.html">backend/validators/messages</a></li><li><a href="module-backend_validators_orderValidators.html">backend/validators/orderValidators</a></li><li><a href="module-backend_validators_productValidators.html">backend/validators/productValidators</a></li><li><a href="module-gateway_internalAuth.html">gateway/internalAuth</a></li><li><a href="module-gateway_logger.html">gateway/logger</a></li><li><a href="module-gateway_server.html">gateway/server</a></li><li><a href="module-microservices_notifications.html">microservices/notifications</a></li><li><a href="module-microservices_notifications_internalAuth.html">microservices/notifications/internalAuth</a></li><li><a href="module-microservices_notifications_logger.html">microservices/notifications/logger</a></li><li><a href="module-microservices_stock-management.html">microservices/stock-management</a></li><li><a href="module-microservices_stock-management_internalAuth.html">microservices/stock-management/internalAuth</a></li><li><a href="module-microservices_stock-management_logger.html">microservices/stock-management/logger</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a>
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

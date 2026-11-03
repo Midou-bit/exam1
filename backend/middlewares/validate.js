@@ -1,6 +1,15 @@
 // backend/middlewares/validate.js : valide req[property] avec un schéma Joi, 400 avec message lisible sinon
+/**
+ * @module backend/middlewares/validate
+ */
 const messages = require('../validators/messages');
 
+/**
+ * @description Fabrique un middleware de validation Joi ; les champs inconnus sont retirés.
+ * @param {joi.Schema} schema - Schéma Joi
+ * @param {string} [property=body] - Partie de la requête à valider
+ * @returns {express.RequestHandler} Middleware qui répond 400 avec un message lisible si la validation échoue
+ */
 module.exports = (schema, property = 'body') => (req, res, next) => {
   const { error, value } = schema.validate(req[property], { abortEarly: false, stripUnknown: true, messages });
   if (error) {

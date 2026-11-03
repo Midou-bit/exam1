@@ -1,4 +1,7 @@
 // gateway/server.js
+/**
+ * @module gateway/server
+ */
 const path = require('path');
 // Charge le .env du service avant les routes (qui lisent les URLs des microservices)
 require('dotenv').config({ path: path.join(__dirname, '.env') });
@@ -21,6 +24,13 @@ app.use(httpLogger);
 app.use(express.json());
 
 // Sonde de santé (Uptime Kuma, health check Render)
+/**
+ * @description Sonde de santé de la gateway (Render, Uptime Kuma).
+ * @route GET /health
+ * @param {express.Request} req - Requête Express
+ * @param {express.Response} res - Réponse Express
+ * @returns {void} 200 { status, service, env, appEnv, uptime }
+ */
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'gateway', env: process.env.NODE_ENV || 'development', appEnv: process.env.APP_ENV || 'local', uptime: process.uptime() });
 });
@@ -30,6 +40,11 @@ app.use(internalAuth);
 
 // Routes principales pour chaque microservice
 //app.use('/auth', authProxy);
+/**
+ * @description Proxys vers les microservices (clé interne exigée en amont).
+ * @route POST /notify → notifications
+ * @route POST /update-stock → stock-management
+ */
 app.use('/notify', notifiProxy);
 app.use('/update-stock', stockProxy);
 

@@ -1,4 +1,7 @@
 // notifi/server.js
+/**
+ * @module microservices/notifications
+ */
 const path = require('path');
 // Charge le .env du service, quel que soit le dossier de lancement
 require('dotenv').config({ path: path.join(__dirname, '.env') });
@@ -25,6 +28,13 @@ const transporter = nodemailer.createTransport({
 });
 
 // Sonde de santé (Uptime Kuma, health check Render)
+/**
+ * @description Sonde de santé de notifications (Render, Uptime Kuma).
+ * @route GET /health
+ * @param {express.Request} req - Requête Express
+ * @param {express.Response} res - Réponse Express
+ * @returns {void} 200 { status, service, env, appEnv, uptime }
+ */
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'notifications', env: process.env.NODE_ENV || 'development', appEnv: process.env.APP_ENV || 'local', uptime: process.uptime() });
 });
@@ -33,6 +43,13 @@ app.get('/health', (req, res) => {
 app.use(internalAuth);
 
 // Route pour envoyer un email
+/**
+ * @description Envoie un email via Nodemailer (Gmail).
+ * @route POST /notify
+ * @param {express.Request} req - Requête Express (corps : to, subject, text ; en-tête x-internal-key)
+ * @param {express.Response} res - Réponse Express
+ * @returns {Promise<void>} 200 si envoyé ; 500 générique en cas d'échec (détail dans les logs)
+ */
 app.post('/notify', async (req, res) => {
   const { to, subject, text } = req.body;
   logger.info('Demande de notification', { subject });

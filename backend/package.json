@@ -2,7 +2,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "seed": "node seeder.js"
+    "seed": "node seeder.js",
+    "docs": "jsdoc -c jsdoc.json"
   },
   "dependencies": {
     "axios": "^1.7.7",
@@ -18,5 +19,8 @@
     "mongoose": "^8.8.1",
     "morgan": "^1.12.1",
     "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "jsdoc": "^4.0.5"
   }
 }

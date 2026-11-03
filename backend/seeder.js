@@ -1,4 +1,7 @@
 // backend/seeder.js : insère les produits de démo et le compte admin (idempotent, relançable sans risque)
+/**
+ * @module backend/seeder
+ */
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const mongoose = require('mongoose');
@@ -41,6 +44,11 @@ const products = [
 ];
 
 // Produits : insertion uniquement s'ils n'existent pas (clé = nom), pas de doublon ni d'écrasement
+/**
+ * @description Insère les produits de démonstration absents (clé : nom), sans doublon ni écrasement.
+ * @returns {Promise<void>}
+ * @throws {Error} Erreur base de données
+ */
 const seedProducts = async () => {
   let inserted = 0;
   for (const { name, ...rest } of products) {
@@ -51,6 +59,11 @@ const seedProducts = async () => {
 };
 
 // Admin : créé depuis ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD, uniquement s'il n'existe pas
+/**
+ * @description Crée le compte admin depuis ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD s'il n'existe pas.
+ * @returns {Promise<void>}
+ * @throws {Error} Erreur base de données
+ */
 const seedAdmin = async () => {
   const { ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
   if (!ADMIN_USERNAME || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
@@ -67,6 +80,10 @@ const seedAdmin = async () => {
   logger.info('Compte admin créé', { username: ADMIN_USERNAME });
 };
 
+/**
+ * @description Point d'entrée de « npm run seed » : connexion, produits, admin, déconnexion (code de sortie 1 en cas d'erreur).
+ * @returns {Promise<void>}
+ */
 const seed = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
