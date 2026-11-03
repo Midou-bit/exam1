@@ -1,0 +1,34 @@
+$ ADMIN_USERNAME=admin ADMIN_PASSWORD=*** INTERNAL_API_KEY=*** scripts/security-smoke.sh
+== Inscription (BUG-05)
+PASS  register invalide (email, mot de passe court)                  400
+PASS  register valide                                                201
+PASS  register doublon                                               409
+== Connexion (SEC-03, SEC-07)
+PASS  login user                                                     200
+PASS  login admin                                                    200
+PASS  injection NoSQL {$ne:null}                                     400
+PASS  mauvais mot de passe : message unique                          401
+== Commandes (SEC-01, BUG-03, BUG-07)
+PASS  prix manipulé (price=1) : commande créée…                 201
+PASS  … avec le prix réel du produit                              2000
+PASS  stock décrémenté de 2                                       18
+PASS  quantité négative                                            400
+PASS  produit inexistant                                             400
+PASS  stock insuffisant                                              409
+== Contrôle d'accès (BUG-04, SEC-06, BUG-07, SEC-09)
+PASS  DELETE commande par un user                                    403
+PASS  statut hors enum                                               400
+PASS  stock non entier (abc)                                         400
+PASS  token invalide                                                 401
+PASS  DELETE commande par l'admin                                    200
+PASS  DELETE commande déjà supprimée                              404
+== Services internes sans clé (SEC-02)
+PASS  gateway /notify sans clé                                      401
+PASS  gateway /update-stock sans clé                                401
+PASS  notifications /notify sans clé                                401
+PASS  stock-management /update-stock sans clé                       401
+PASS  gateway /update-stock avec la clé                             200
+PASS  /health reste public                                           200
+== Force brute (SEC-04) : en dernier, la limite bloque ensuite /api/auth pendant 15 min
+PASS  rate limit atteint                                             429
+== Résultat : 26 réussis, 0 en échec

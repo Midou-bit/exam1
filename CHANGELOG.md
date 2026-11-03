@@ -7,6 +7,10 @@ et le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Ajouté
+- Captures d'écran de la session 2 dans `docs/captures/` (CHANGELOG et AUDIT sur GitHub, JSDoc, tests de sécurité, commande et stock en production).
+- BUG-17 documenté : les Static Sites Render servaient encore le frontend v1.0.0 ; code déjà corrigé, redéploiement à faire.
+
 ## [1.2.0] - 2026-11-03
 
 Documentation et corrections de gravité basse.
