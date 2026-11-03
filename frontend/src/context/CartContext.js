@@ -56,8 +56,9 @@ export const CartProvider = ({ children }) => {
 
   const [cartState, dispatch] = useReducer(cartReducer, {
     cart: [],
-    shippingMethod: null,
-    paymentMethod: null,
+    // BUG-02 : mêmes valeurs que celles affichées par défaut dans les listes
+    shippingMethod: "colissimo",
+    paymentMethod: "Carte bancaire",
     shippingAddress: {
       street: "",
       city: "",
