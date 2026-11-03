@@ -8,6 +8,17 @@ const helmet = require('helmet');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const { logger, httpLogger } = require('./logger');
+const { notFound, errorHandler } = require('./middlewares/errorHandler');
+
+// BUG-01 : aucune erreur asynchrone ne doit arrêter le processus sans trace
+process.on('unhandledRejection', (reason) => {
+  logger.error('Promesse rejetée non gérée', { error: reason instanceof Error ? reason.message : String(reason) });
+});
+// Après une exception non interceptée, l'état est incertain : on journalise puis on laisse l'hébergeur redémarrer
+process.on('uncaughtException', (err) => {
+  logger.error('Exception non interceptée', { error: err.message });
+  process.exit(1);
+});
 
 const app = express();
 connectDB();
@@ -38,6 +49,10 @@ app.get('/health', (req, res) => {
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
+
+// BUG-01 : 404 et erreurs en JSON (503 si la base est indisponible)
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => logger.info(`Serveur en écoute sur le port ${PORT}`));

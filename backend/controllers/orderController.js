@@ -18,7 +18,7 @@ const restoreStock = (items) => Promise.all(
 );
 
 
-exports.createOrder = async (req, res) => {
+exports.createOrder = async (req, res, next) => {
   //userLog(`user is ${JSON.stringify(req.user)}`)
   logger.debug('createOrder', { userId: req.user.userId })
   //const { items, shippingAddress, paymentMethod } = req.body;
@@ -141,9 +141,7 @@ exports.createOrder = async (req, res) => {
     });
   } catch (error) {
     logger.error('Erreur lors de la création de la commande', { error: error.message });
-    res.status(500).json({
-      message: 'Une erreur est survenue lors de la création de la commande.',
-    });
+    next(error);
   }
 };
 
@@ -218,7 +216,7 @@ exports.validateOrder = async (req, res) => {
   res.status(200).json({message: `Commande ${orderId} validée avec succès.`})
 }
 
-exports.updateOrderStatus = async (req, res) => {
+exports.updateOrderStatus = async (req, res, next) => {
   const { orderId } = req.params;
   const { status } = req.body;
 
@@ -243,6 +241,6 @@ exports.updateOrderStatus = async (req, res) => {
     res.status(200).json({ message: "Statut mis à jour avec succès", order });
   } catch (error) {
     logger.error('Erreur lors de la mise à jour de la commande', { error: error.message });
-    res.status(500).json({ message: "Erreur serveur." });
+    next(error);
   }
 };

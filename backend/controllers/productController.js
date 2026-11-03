@@ -7,7 +7,7 @@ exports.getProducts = async (req, res) => {
     res.json(products);
 };
 
-exports.updateProductStock = async (req, res) => {
+exports.updateProductStock = async (req, res, next) => {
     try {
       const { stock } = req.body;
       const {productId} = req.params;
@@ -29,6 +29,6 @@ exports.updateProductStock = async (req, res) => {
       res.json({ message: "Stock mis à jour avec succès.", product });
     } catch (error) {
       logger.error('Erreur lors de la mise à jour du stock', { error: error.message });
-      res.status(500).json({ message: "Erreur serveur." });
+      next(error);
     }
   };

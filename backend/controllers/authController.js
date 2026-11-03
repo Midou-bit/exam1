@@ -7,7 +7,7 @@ const axios = require('axios');
 const { logger } = require('../logger');
 //const sendEmail = require('../services/emailService');
 
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   const { username, password } = req.body;
   // Jamais de mot de passe ni de token dans les logs
   logger.debug('Tentative de connexion', { username });
@@ -26,12 +26,12 @@ exports.login = async (req, res) => {
     res.json({ token, role: user.role, username: user.username });
   } catch (error) {
     logger.error('Erreur lors de la connexion', { error: error.message });
-    res.status(500).json({ message: 'Erreur serveur' });
+    next(error);
   }
 };
 
 
-exports.register = async (req, res) => {
+exports.register = async (req, res, next) => {
   const { username, email, password } = req.body;
   logger.debug('Tentative d\'inscription', { username });
 
@@ -66,6 +66,6 @@ exports.register = async (req, res) => {
     res.status(201).json({ message: 'Utilisateur créé avec succès.' });
   } catch (error) {
     logger.error('Erreur lors de l\'inscription', { error: error.message });
-    res.status(500).json({ message: 'Une erreur est survenue.' });
+    next(error);
   }
 };

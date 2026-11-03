@@ -2,10 +2,11 @@
 const express = require('express');
 const { getProducts, updateProductStock } = require('../controllers/productController');
 const { authenticateToken, isAdmin } = require('../middlewares/authMiddleware');
+const { asyncHandler } = require('../middlewares/errorHandler');
 
 const router = express.Router();
-router.get('/', getProducts);
-router.put("/:productId/stock", authenticateToken, isAdmin, updateProductStock);
+router.get('/', asyncHandler(getProducts));
+router.put("/:productId/stock", authenticateToken, isAdmin, asyncHandler(updateProductStock));
 
 
 module.exports = router;

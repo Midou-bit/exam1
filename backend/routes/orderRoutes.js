@@ -2,14 +2,15 @@
 const express = require('express');
 const { createOrder, deleteOrder, getOrders, validateOrder, updateOrderStatus } = require('../controllers/orderController');
 const { authenticateToken, isAdmin } = require('../middlewares/authMiddleware');
+const { asyncHandler } = require('../middlewares/errorHandler');
 
 const router = express.Router();
 
-router.get('/', authenticateToken, isAdmin, getOrders); // Accès pour administrateurs
-router.post('/', authenticateToken, createOrder); // Accès pour utilisateurs connectés
-router.delete('/:id', authenticateToken, deleteOrder); // Accès pour administrateurs
-router.put('/:id/validate', authenticateToken, isAdmin, validateOrder); // Accès pour administrateurs
-router.put('/:orderId/status', authenticateToken, isAdmin, updateOrderStatus); // Accès pour administrateurs
+router.get('/', authenticateToken, isAdmin, asyncHandler(getOrders)); // Accès pour administrateurs
+router.post('/', authenticateToken, asyncHandler(createOrder)); // Accès pour utilisateurs connectés
+router.delete('/:id', authenticateToken, asyncHandler(deleteOrder)); // Accès pour administrateurs
+router.put('/:id/validate', authenticateToken, isAdmin, asyncHandler(validateOrder)); // Accès pour administrateurs
+router.put('/:orderId/status', authenticateToken, isAdmin, asyncHandler(updateOrderStatus)); // Accès pour administrateurs
 
 
 module.exports = router;
