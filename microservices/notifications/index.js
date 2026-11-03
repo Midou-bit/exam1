@@ -23,7 +23,7 @@ const transporter = nodemailer.createTransport({
 
 // Sonde de santé (Uptime Kuma, health check Render)
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'notifications', env: process.env.NODE_ENV || 'development', uptime: process.uptime() });
+  res.json({ status: 'ok', service: 'notifications', env: process.env.NODE_ENV || 'development', appEnv: process.env.APP_ENV || 'local', uptime: process.uptime() });
 });
 
 // Route pour envoyer un email

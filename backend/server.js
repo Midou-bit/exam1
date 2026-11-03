@@ -29,6 +29,7 @@ app.get('/health', (req, res) => {
     status: healthy ? 'ok' : 'error',
     service: 'backend',
     env: process.env.NODE_ENV || 'development',
+    appEnv: process.env.APP_ENV || 'local', // local, preprod ou prod
     uptime: process.uptime(),
     mongo: mongoState,
   });
