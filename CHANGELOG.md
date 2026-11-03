@@ -8,6 +8,7 @@ et le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 ## [Unreleased]
 
 ### Ajouté
+- Audit fonctionnel et de sécurité `docs/AUDIT.md` : 34 tests fonctionnels, 28 anomalies (16 bugs, 12 failles) classées par gravité avec reproduction et correction proposée, état des dépendances (npm audit / outdated).
 - Supervision Uptime Kuma (`monitoring/docker-compose.yml`, configuration scriptée `monitoring/setup_kuma.py`) : sondes `/health` à mot-clé sur les 4 services et sondes des fronts (avec alerte d'expiration TLS) en preprod (300 s) et prod (120 s), alertes ntfy, page de statut `exam1`.
 - Seed des bases Atlas `exam1_preprod` et `exam1_prod` (5 produits et 1 compte admin chacune), avec un utilisateur Atlas à moindre privilège par environnement et des secrets stockés hors du dépôt.
 - Pipeline GitHub Actions `.github/workflows/ci-cd.yml` : vérification des services Node (npm ci, node --check, npm audit), tests et build du frontend, test d'intégration docker compose, publication des images sur ghcr.io (tags `preprod`/`prod` + SHA court), déploiement facultatif par Deploy Hooks Render.
