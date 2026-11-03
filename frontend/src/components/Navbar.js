@@ -2,19 +2,20 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { clearSession } from '../services/authSession';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { cart } = useCart();
+  const { cart, dispatch } = useCart();
 
   // Simuler l'état d'authentification avec le localStorage
   const isAuthenticated = !!localStorage.getItem('token');
   const username = localStorage.getItem('username'); // Récupère le nom d'utilisateur si connecté
 
   const handleLogout = () => {
-    // Supprimer les informations d'authentification
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
+    // BUG-11 : token, username et role supprimés, panier vidé
+    clearSession();
+    dispatch({ type: 'CLEAR_CART' });
     navigate('/login');
   };
 

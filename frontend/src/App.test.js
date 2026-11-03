@@ -8,6 +8,7 @@ jest.mock('axios', () => ({
   get: () => Promise.resolve({ data: [] }),
   post: () => Promise.resolve({ data: {} }),
   put: () => Promise.resolve({ data: {} }),
+  interceptors: { response: { use: () => {} } },
 }));
 
 // Test de fumée : l'application démarre et affiche la barre de navigation
