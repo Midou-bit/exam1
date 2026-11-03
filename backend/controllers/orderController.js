@@ -231,7 +231,7 @@ exports.updateOrderStatus = async (req, res, next) => {
     const order = await Order.findByIdAndUpdate(
       orderId,
       { status, updatedAt: new Date() }, // Mise à jour du statut et de la date de modification
-      { new: true } // Retourne la commande mise à jour
+      { new: true, runValidators: true } // Retourne la commande mise à jour ; SEC-06 : enum vérifié
     );
 
     if (!order) {
