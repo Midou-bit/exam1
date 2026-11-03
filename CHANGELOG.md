@@ -7,9 +7,30 @@ et le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-03
+
+Documentation et corrections de gravité basse.
+
+### Ajouté
+- JSDoc des fonctions exportées du backend (contrôleurs, middlewares, validateurs, `config/db.js`, `seeder.js`, `logger.js`), de la gateway et des microservices : 53 blocs, un `@module` par fichier.
+- Documentation HTML générée dans `docs/api` (`cd backend && npm run docs`, configuration `backend/jsdoc.json`, jsdoc en devDependency).
+- `README.md` : architecture, environnements, lancement local, tests, CI/CD, supervision, liens vers la documentation.
+- Commentaires d'en-tête des composants et pages React (rôle, props, contexte) et de la logique non évidente (panier, validation de la commande).
+
+### Corrigé
+- BUG-09 : le réducteur `ADD_TO_CART` ne modifie plus l'état précédent.
+- BUG-12 : clé de liste `key={product._id}` dans ProductList.
+
+### Supprimé
+- BUG-14 : fichier dupliqué `components/ProductList.js` (copie de ProtectedRoute, importée nulle part).
+
 ## [1.1.0] - 2026-11-03
 
 Corrections issues de l'audit `docs/AUDIT.md` (un commit par anomalie).
+
+### Ajouté
+- Audit fonctionnel et de sécurité `docs/AUDIT.md` : 34 tests fonctionnels, 28 anomalies (16 bugs, 12 failles) classées par gravité avec reproduction et correction proposée, état des dépendances (npm audit / outdated).
+- Test de non-régression `scripts/security-smoke.sh` (26 vérifications), exécuté par la CI.
 
 ### Sécurité
 - SEC-01 : prix relus en base et total recalculé par le serveur ; `price` et `total` envoyés par le client ignorés.
@@ -45,7 +66,6 @@ Corrections issues de l'audit `docs/AUDIT.md` (un commit par anomalie).
 Mise en production initiale (Render, MongoDB Atlas, CI/CD, supervision).
 
 ### Ajouté
-- Audit fonctionnel et de sécurité `docs/AUDIT.md` : 34 tests fonctionnels, 28 anomalies (16 bugs, 12 failles) classées par gravité avec reproduction et correction proposée, état des dépendances (npm audit / outdated).
 - Supervision Uptime Kuma (`monitoring/docker-compose.yml`, configuration scriptée `monitoring/setup_kuma.py`) : sondes `/health` à mot-clé sur les 4 services et sondes des fronts (avec alerte d'expiration TLS) en preprod (300 s) et prod (120 s), alertes ntfy, page de statut `exam1`.
 - Seed des bases Atlas `exam1_preprod` et `exam1_prod` (5 produits et 1 compte admin chacune), avec un utilisateur Atlas à moindre privilège par environnement et des secrets stockés hors du dépôt.
 - Pipeline GitHub Actions `.github/workflows/ci-cd.yml` : vérification des services Node (npm ci, node --check, npm audit), tests et build du frontend, test d'intégration docker compose, publication des images sur ghcr.io (tags `preprod`/`prod` + SHA court), déploiement facultatif par Deploy Hooks Render.
@@ -88,3 +108,8 @@ Mise en production initiale (Render, MongoDB Atlas, CI/CD, supervision).
 - CORS du backend restreint aux origines de `CORS_ORIGIN`.
 - `.gitignore` : tous les `.env*` (sauf `.env.example`), `logs/` et `build/` exclus du dépôt.
 - Conteneurs exécutés avec l'utilisateur non-root `node`, dépendances de production uniquement.
+
+[Unreleased]: https://github.com/Midou-bit/exam1/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/Midou-bit/exam1/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/Midou-bit/exam1/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/Midou-bit/exam1/releases/tag/v1.0.0
