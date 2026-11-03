@@ -27,6 +27,8 @@ services:
       NODE_ENV: production
       APP_ENV: local
       PORT: 4002
+      # SEC-02 : clé interne (valeur de développement si non définie)
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key-local}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4002/health || exit 1"]
       interval: 15s
@@ -42,6 +44,8 @@ services:
       NODE_ENV: production
       APP_ENV: local
       PORT: 4003
+      # SEC-02 : clé interne (valeur de développement si non définie)
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key-local}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4003/health || exit 1"]
       interval: 15s
@@ -60,6 +64,8 @@ services:
       NODE_ENV: production
       APP_ENV: local
       PORT: 8000
+      # SEC-02 : clé interne (valeur de développement si non définie)
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key-local}
       NOTIFI_SERVICE_URL: http://notifications:4002
       STOCK_SERVICE_URL: http://stock-management:4003
     depends_on:
@@ -85,6 +91,8 @@ services:
       NODE_ENV: production
       APP_ENV: local
       PORT: 5000
+      # SEC-02 : clé interne (valeur de développement si non définie)
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key-local}
       MONGO_URI: mongodb://mongo:27017/mydatabase
       GATEWAY_URL: http://gateway:8000
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}

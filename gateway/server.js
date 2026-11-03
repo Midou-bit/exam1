@@ -5,6 +5,7 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const helmet = require('helmet');
 const { logger, httpLogger } = require('./logger');
+const internalAuth = require('./internalAuth');
 //const authProxy = require('./routes/auth');
 const notifiProxy = require('./routes/notifi');
 const stockProxy = require('./routes/stock');
@@ -23,6 +24,9 @@ app.use(express.json());
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'gateway', env: process.env.NODE_ENV || 'development', appEnv: process.env.APP_ENV || 'local', uptime: process.uptime() });
 });
+
+// SEC-02 : clé interne obligatoire pour toutes les routes (sauf /health)
+app.use(internalAuth);
 
 // Routes principales pour chaque microservice
 //app.use('/auth', authProxy);

@@ -3,13 +3,19 @@
 # - Déploiement automatique uniquement si les checks GitHub Actions passent (autoDeployTrigger: checksPass).
 # - Les instances gratuites ne reçoivent pas le trafic du réseau privé : les services
 #   s'appellent par leur URL publique https://<nom>.onrender.com (fromService ne donne que l'hôte privé).
-# - Secrets (sync: false) saisis dans le dashboard ; JWT_SECRET généré par Render, distinct par environnement.
+# - Secrets (sync: false) saisis dans le dashboard ; JWT_SECRET et INTERNAL_API_KEY générés par Render, distincts par environnement.
 # - PORT est fourni par Render (10000) et lu par chaque service.
 
 projects:
   - name: exam1
     environments:
       - name: preprod
+        # SEC-02 : clé interne générée par Render, propre à l'environnement
+        envVarGroups:
+          - name: midou-exam1-preprod-internal
+            envVars:
+              - key: INTERNAL_API_KEY
+                generateValue: true
         services:
           # Frontend React servi par le CDN Render (Static Site)
           - name: midou-exam1-preprod-frontend
@@ -55,6 +61,7 @@ projects:
               paths:
                 - backend/**
             envVars:
+              - fromGroup: midou-exam1-preprod-internal
               - key: NODE_ENV
                 value: production
               - key: APP_ENV
@@ -85,6 +92,7 @@ projects:
               paths:
                 - gateway/**
             envVars:
+              - fromGroup: midou-exam1-preprod-internal
               - key: NODE_ENV
                 value: production
               - key: APP_ENV
@@ -109,6 +117,7 @@ projects:
               paths:
                 - microservices/notifications/**
             envVars:
+              - fromGroup: midou-exam1-preprod-internal
               - key: NODE_ENV
                 value: production
               - key: APP_ENV
@@ -133,6 +142,7 @@ projects:
               paths:
                 - microservices/stock-management/**
             envVars:
+              - fromGroup: midou-exam1-preprod-internal
               - key: NODE_ENV
                 value: production
               - key: APP_ENV
@@ -140,6 +150,12 @@ projects:
               - key: LOG_LEVEL
                 value: info
       - name: prod
+        # SEC-02 : clé interne générée par Render, propre à l'environnement
+        envVarGroups:
+          - name: midou-exam1-prod-internal
+            envVars:
+              - key: INTERNAL_API_KEY
+                generateValue: true
         services:
           # Frontend React servi par le CDN Render (Static Site)
           - name: midou-exam1-prod-frontend
@@ -185,6 +201,7 @@ projects:
               paths:
                 - backend/**
             envVars:
+              - fromGroup: midou-exam1-prod-internal
               - key: NODE_ENV
                 value: production
               - key: APP_ENV
@@ -215,6 +232,7 @@ projects:
               paths:
                 - gateway/**
             envVars:
+              - fromGroup: midou-exam1-prod-internal
               - key: NODE_ENV
                 value: production
               - key: APP_ENV
@@ -239,6 +257,7 @@ projects:
               paths:
                 - microservices/notifications/**
             envVars:
+              - fromGroup: midou-exam1-prod-internal
               - key: NODE_ENV
                 value: production
               - key: APP_ENV
@@ -263,6 +282,7 @@ projects:
               paths:
                 - microservices/stock-management/**
             envVars:
+              - fromGroup: midou-exam1-prod-internal
               - key: NODE_ENV
                 value: production
               - key: APP_ENV

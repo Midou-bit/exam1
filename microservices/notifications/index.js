@@ -6,6 +6,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const { logger, httpLogger } = require('./logger');
+const internalAuth = require('./internalAuth');
 //console.log(`process evn is ${JSON.stringify(process.env)}`)
 
 const app = express();
@@ -25,6 +26,9 @@ const transporter = nodemailer.createTransport({
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'notifications', env: process.env.NODE_ENV || 'development', appEnv: process.env.APP_ENV || 'local', uptime: process.uptime() });
 });
+
+// SEC-02 : clé interne obligatoire (sauf /health)
+app.use(internalAuth);
 
 // Route pour envoyer un email
 app.post('/notify', async (req, res) => {

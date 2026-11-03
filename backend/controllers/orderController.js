@@ -9,6 +9,8 @@ const { logger } = require('../logger');
 // URL de la gateway et destinataire des notifications (variables d'environnement)
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8000';
 const NOTIFY_ADMIN_EMAIL = process.env.NOTIFY_ADMIN_EMAIL;
+// SEC-02 : clé partagée avec la gateway et les microservices
+const INTERNAL_HEADERS = { 'x-internal-key': process.env.INTERNAL_API_KEY || '' };
 
 // BUG-03 : remet en stock les quantités déjà décrémentées (échec en cours de commande)
 const restoreStock = (items) => Promise.all(
@@ -116,7 +118,7 @@ exports.createOrder = async (req, res) => {
         text: `Une commande a été créée avec succès pour les produits suivants : \n${orderDetails
           .map((item) => `Produit ID : ${item.productId}, Quantité : ${item.quantity}`)
           .join('\n')}`,
-      }, { timeout: 5000 }); // ne bloque jamais la commande (SMTP lent ou bloqué)
+      }, { timeout: 5000, headers: INTERNAL_HEADERS }); // ne bloque jamais la commande (SMTP lent ou bloqué)
     } catch (error) {
       logger.warn('Erreur lors de l\'envoi de la notification', { error: error.message });
     }
