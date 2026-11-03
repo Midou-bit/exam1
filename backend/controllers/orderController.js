@@ -1,6 +1,8 @@
 // backend/controllers/orderController.js
 const axios = require('axios');
+const mongoose = require('mongoose');
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 const orderLog = require('debug')('orderRoutes:console')
 const { logger } = require('../logger');
 
@@ -34,15 +36,33 @@ exports.createOrder = async (req, res) => {
     });
   }
 
+  // SEC-01 : quantité entière >= 1 et identifiant produit valide
+  for (const { productId, quantity } of items) {
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      return res.status(400).json({ message: 'La quantité doit être un entier supérieur ou égal à 1.' });
+    }
+    if (!mongoose.isValidObjectId(productId)) {
+      return res.status(400).json({ message: `Identifiant de produit invalide : ${productId}` });
+    }
+  }
+
   try {
-    // Logique pour préparer les détails de la commande
-    const orderDetails = items.map(({ productId, quantity, price }) => {
+    // SEC-01 : prix relus en base ; price et total envoyés par le client sont ignorés
+    const products = await Product.find({ _id: { $in: items.map((item) => item.productId) } });
+    const productsById = new Map(products.map((product) => [product._id.toString(), product]));
+    const unknown = items.find(({ productId }) => !productsById.has(String(productId)));
+    if (unknown) {
+      return res.status(400).json({ message: `Produit introuvable : ${unknown.productId}` });
+    }
+
+    const orderDetails = items.map(({ productId, quantity }) => {
+      const { price } = productsById.get(String(productId));
       logger.debug('Article de commande', { productId, quantity, price });
       return { productId, quantity, price };
     });
 
-    // Création de la commande dans la base de données
-    const total = items.reduce(
+    // Total recalculé côté serveur
+    const total = orderDetails.reduce(
       (acc, { price, quantity }) => acc + price * quantity,
       0
     );
