@@ -9,6 +9,7 @@ const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const { logger, httpLogger } = require('./logger');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
+const { authLimiter } = require('./middlewares/rateLimiter');
 
 // BUG-01 : aucune erreur asynchrone ne doit arrêter le processus sans trace
 process.on('unhandledRejection', (reason) => {
@@ -48,7 +49,8 @@ app.get('/health', (req, res) => {
 
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
-app.use('/api/auth', require('./routes/authRoutes'));
+// SEC-04 : 10 tentatives / 15 min par IP (l'IP réelle est lue grâce à trust proxy)
+app.use('/api/auth', authLimiter, require('./routes/authRoutes'));
 
 // BUG-01 : 404 et erreurs en JSON (503 si la base est indisponible)
 app.use(notFound);
