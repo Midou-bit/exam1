@@ -311,15 +311,34 @@ curl -s "https://ntfy.sh/midou-exam1-alertes/json?poll=1&since=10m"   # vérifie
 - Les sondes régulières empêchent les services gratuits de s'endormir. Le quota de 750 h d'instance par mois pour tout le workspace est donc consommé en continu : 8 services éveillés l'épuisent en 4 jours environ. Pour une démonstration, ça passe ; ensuite, il faut mettre les monitors en pause ou espacer les intervalles.
 - La page de statut n'est publique que sur le réseau local, puisqu'elle est servie par l'instance du poste.
 
+## Étape 14 — Corrections de sécurité (version 1.1.0)
+
+**Fait** : correction des anomalies critiques et hautes de `docs/AUDIT.md`, un commit par anomalie (le détail et le statut de chacune sont dans l'audit). Un test de non-régression `scripts/security-smoke.sh` a été ajouté au job `integration` de la CI.
+
+**Impact sur le déploiement**
+- Nouvelle variable `INTERNAL_API_KEY`, partagée par le backend, la gateway et les deux microservices. Dans `render.yaml`, elle est définie dans un groupe de variables par environnement (`midou-exam1-preprod-internal`, `midou-exam1-prod-internal`, `generateValue: true`) et rattachée aux services par `fromGroup`. La syntaxe a été validée contre le schéma JSON officiel des Blueprints.
+- Si la clé est absente, la gateway et les microservices refusent toute requête, sauf `/health` (refus par défaut). Les commandes restent possibles : un échec de notification n'est qu'un `warn`.
+- Le backend redémarre proprement sans base (503 puis reconnexion) : le health check Render signale la panne sans boucle de crash.
+
+**Pourquoi**
+- Les failles corrigées ont été démontrées par l'audit : fraude sur les prix, relais de mail ouvert, injection NoSQL, force brute, plantage du backend. Chacune est rejouée à chaque push, ce qui empêche une régression d'atteindre la préproduction.
+
+**Commandes**
+```bash
+docker compose up --build -d --wait
+docker compose exec -T -e ADMIN_USERNAME=admin -e ADMIN_EMAIL=admin@local.test -e ADMIN_PASSWORD=... backend node seeder.js
+ADMIN_USERNAME=admin ADMIN_PASSWORD=... INTERNAL_API_KEY=dev-internal-key-local scripts/security-smoke.sh   # 26 réussis, 0 en échec
+```
+
 ---
 
 ## Variables d'environnement par service
 
 | Service | Variables |
 |---|---|
-| backend | `NODE_ENV`, `APP_ENV`, `PORT`, `MONGO_URI`, `JWT_SECRET`, `GATEWAY_URL`, `NOTIFY_ADMIN_EMAIL`, `CORS_ORIGIN`, `LOG_LEVEL`, `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (seed) |
-| gateway | `NODE_ENV`, `APP_ENV`, `PORT`, `GATEWAY_PORT`, `NOTIFI_SERVICE_URL`, `STOCK_SERVICE_URL`, `LOG_LEVEL` (`AUTH_SERVICE_URL` non utilisée) |
-| notifications | `NODE_ENV`, `APP_ENV`, `PORT`, `NOTIFI_PORT`, `EMAIL_USER`, `EMAIL_APPLICATION_PASSWORD`, `LOG_LEVEL` |
-| stock-management | `NODE_ENV`, `APP_ENV`, `PORT`, `LOG_LEVEL` |
+| backend | `NODE_ENV`, `APP_ENV`, `INTERNAL_API_KEY`, `PORT`, `MONGO_URI`, `JWT_SECRET`, `GATEWAY_URL`, `NOTIFY_ADMIN_EMAIL`, `CORS_ORIGIN`, `LOG_LEVEL`, `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (seed) |
+| gateway | `NODE_ENV`, `APP_ENV`, `INTERNAL_API_KEY`, `PORT`, `GATEWAY_PORT`, `NOTIFI_SERVICE_URL`, `STOCK_SERVICE_URL`, `LOG_LEVEL` (`AUTH_SERVICE_URL` non utilisée) |
+| notifications | `NODE_ENV`, `APP_ENV`, `INTERNAL_API_KEY`, `PORT`, `NOTIFI_PORT`, `EMAIL_USER`, `EMAIL_APPLICATION_PASSWORD`, `LOG_LEVEL` |
+| stock-management | `NODE_ENV`, `APP_ENV`, `INTERNAL_API_KEY`, `PORT`, `LOG_LEVEL` |
 | frontend (build) | `REACT_APP_API_URL` |
 | racine (compose) | `REACT_APP_API_URL`, `CORS_ORIGIN` |

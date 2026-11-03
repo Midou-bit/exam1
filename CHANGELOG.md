@@ -7,6 +7,43 @@ et le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-03
+
+Corrections issues de l'audit `docs/AUDIT.md` (un commit par anomalie).
+
+### Sécurité
+- SEC-01 : prix relus en base et total recalculé par le serveur ; `price` et `total` envoyés par le client ignorés.
+- SEC-02 : clé interne `INTERNAL_API_KEY` (en-tête `x-internal-key`, comparaison à temps constant) exigée par la gateway, notifications et stock-management, sauf `/health` ; groupe de variables Render par environnement, valeur générée.
+- SEC-03 : validation Joi du login (chaînes uniquement), qui bloque l'injection d'opérateurs NoSQL.
+- SEC-04 : limitation à 10 tentatives / 15 min par IP sur `/api/auth` (429 JSON).
+- SEC-05 : `npm audit fix` dans les 6 packages, nodemailer 10, react-router-dom 6.30 ; aucune vulnérabilité restante côté serveur.
+- SEC-06 : statut de commande limité aux valeurs de l'enum, `runValidators` sur les mises à jour.
+- SEC-07 : message unique « Identifiants invalides » (401).
+- SEC-08 : plus d'objet `error` SMTP renvoyé au client, `X-Powered-By` désactivé, `server_tokens off` (nginx), erreurs et 404 en JSON.
+- SEC-09 : session fermée côté front (localStorage vidé, redirection vers `/login`) quand l'API rejette le token ; l'API répond 401 JSON pour un token manquant, invalide ou expiré.
+- SEC-10 : port MongoDB du compose publié uniquement sur 127.0.0.1.
+
+### Corrigé
+- BUG-01 : MongoDB indisponible ne bloque plus et n'arrête plus le backend (503 rapide, reconnexion, gestionnaires `unhandledRejection` / `uncaughtException`, middleware d'erreur global).
+- BUG-02 : livraison et paiement initialisés à Colissimo / Carte bancaire ; la commande passe sans modifier les listes.
+- BUG-03 : stock décrémenté de façon atomique à la commande ; 409 si le stock est insuffisant, avec annulation des décréments déjà faits.
+- BUG-04 : `DELETE /api/orders/:id` réservé à l'admin ; la commande est réellement supprimée (404 si absente).
+- BUG-05 : validation de l'inscription (username, email, mot de passe d'au moins 8 caractères avec lettre et chiffre) ; doublon en 409.
+- BUG-06 : `validateOrder` écrit le statut « En cours de traitement ».
+- BUG-07 : erreurs de validation (commande, stock) renvoyées en 400 au lieu de 500 ; stock entier obligatoire.
+- BUG-08 : commande d'un produit inexistant refusée (400).
+- BUG-11 : la déconnexion supprime aussi le rôle et vide le panier.
+
+### Modifié
+- Dépendances : `joi` et `express-rate-limit` (backend) ; nodemailer 6 → 10 ; react-router-dom 6.4 → 6.30.
+- `docker-compose.yml` : `restart: unless-stopped`, `INTERNAL_API_KEY` (valeur de développement).
+- CI : le job `integration` seede la base et exécute `scripts/security-smoke.sh` (26 vérifications).
+- La page Commande affiche le message renvoyé par le serveur (ex. stock insuffisant).
+
+## [1.0.0] - 2026-11-03
+
+Mise en production initiale (Render, MongoDB Atlas, CI/CD, supervision).
+
 ### Ajouté
 - Audit fonctionnel et de sécurité `docs/AUDIT.md` : 34 tests fonctionnels, 28 anomalies (16 bugs, 12 failles) classées par gravité avec reproduction et correction proposée, état des dépendances (npm audit / outdated).
 - Supervision Uptime Kuma (`monitoring/docker-compose.yml`, configuration scriptée `monitoring/setup_kuma.py`) : sondes `/health` à mot-clé sur les 4 services et sondes des fronts (avec alerte d'expiration TLS) en preprod (300 s) et prod (120 s), alertes ntfy, page de statut `exam1`.
