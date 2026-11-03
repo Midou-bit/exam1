@@ -2,6 +2,8 @@ const express = require('express');
 const { logger, httpLogger } = require('./logger');
 const internalAuth = require('./internalAuth');
 const app = express();
+// SEC-08 : ne pas annoncer la technologie utilisée
+app.disable('x-powered-by');
 // PORT imposé par Render, sinon port historique 4003
 const PORT = process.env.PORT || 4003;
 
@@ -20,6 +22,14 @@ app.post('/update-stock', (req, res) => {
     const { productId, quantity } = req.body;
     logger.info('Mise à jour du stock', { productId, quantity });
     res.send(`Stock mis à jour pour le produit de ID : ${productId}`);
+});
+
+// SEC-08 : 404 et erreurs en JSON, sans détail interne
+app.use((req, res) => res.status(404).json({ message: 'Ressource introuvable' }));
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  logger.error('Erreur non gérée', { error: err.message, url: req.originalUrl });
+  res.status(err.type === 'entity.parse.failed' ? 400 : 500).json({ message: err.type === 'entity.parse.failed' ? 'Corps JSON invalide' : 'Erreur serveur' });
 });
 
 app.listen(PORT, () => logger.info(`Service de gestion des stocks sur le port ${PORT}`));

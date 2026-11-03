@@ -33,6 +33,14 @@ app.use(internalAuth);
 app.use('/notify', notifiProxy);
 app.use('/update-stock', stockProxy);
 
+// SEC-08 : 404 et erreurs en JSON, sans détail interne
+app.use((req, res) => res.status(404).json({ message: 'Ressource introuvable' }));
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  logger.error('Erreur non gérée', { error: err.message, url: req.originalUrl });
+  res.status(err.type === 'entity.parse.failed' ? 400 : 500).json({ message: err.type === 'entity.parse.failed' ? 'Corps JSON invalide' : 'Erreur serveur' });
+});
+
 // Lancer le Gateway (PORT imposé par Render, sinon GATEWAY_PORT)
 const PORT = process.env.PORT || process.env.GATEWAY_PORT || 8000;
 app.listen(PORT, () => {

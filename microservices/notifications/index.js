@@ -10,6 +10,8 @@ const internalAuth = require('./internalAuth');
 //console.log(`process evn is ${JSON.stringify(process.env)}`)
 
 const app = express();
+// SEC-08 : ne pas annoncer la technologie utilisée
+app.disable('x-powered-by');
 app.use(httpLogger);
 app.use(bodyParser.json());
 
@@ -52,8 +54,17 @@ app.post('/notify', async (req, res) => {
     return res.status(200).json({ message: 'Email envoyé avec succès.' });
   } catch (error) {
     logger.error('Erreur lors de l\'envoi de l\'email', { error: error.message });
-    return res.status(500).json({ message: 'Erreur lors de l\'envoi de l\'email.', error });
+    // SEC-08 : le détail de l'erreur SMTP reste dans les logs
+    return res.status(500).json({ message: 'Erreur lors de l\'envoi de l\'email.' });
   }
+});
+
+// SEC-08 : 404 et erreurs en JSON, sans détail interne
+app.use((req, res) => res.status(404).json({ message: 'Ressource introuvable' }));
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  logger.error('Erreur non gérée', { error: err.message, url: req.originalUrl });
+  res.status(err.type === 'entity.parse.failed' ? 400 : 500).json({ message: err.type === 'entity.parse.failed' ? 'Corps JSON invalide' : 'Erreur serveur' });
 });
 
 // Lancer le service Notification (PORT imposé par Render, sinon NOTIFI_PORT)
