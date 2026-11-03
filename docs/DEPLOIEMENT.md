@@ -241,6 +241,37 @@ Fichier : `render.yaml` (syntaxe vérifiée sur https://render.com/docs/blueprin
 - Le quota est de 750 h d'instance par mois pour tout le workspace. 8 services maintenus éveillés en continu le dépasseraient en 4 jours environ : il faut espacer les sondes Uptime Kuma, ou ne garder la supervision continue que pendant la démonstration.
 - Le SMTP sortant est bloqué : les emails échouent (journalisés en `warn`).
 
+## Étape 12 — Seed des bases Atlas
+
+**Fait**
+- Deux bases distinctes sur le cluster Atlas : `exam1_preprod` et `exam1_prod`.
+- Un utilisateur Atlas par environnement (`exam1_preprod_user`, `exam1_prod_user`), chacun limité au rôle `readWrite` sur **sa** base (moindre privilège).
+- Les identifiants (URI Atlas, compte admin applicatif) sont stockés **hors du dépôt**, dans `~/.exam1-secrets/atlas.env` (dossier en `chmod 700`, fichier en `chmod 600`).
+- Les mots de passe admin sont générés aléatoirement, un par environnement.
+- Le seeder (`npm run seed`) a été lancé depuis le poste sur chaque base, les variables étant injectées dans le seul processus, sans jamais être affichées.
+- Une vérification indépendante a suivi : 5 produits et 1 compte `role: admin` par base.
+
+**Pourquoi**
+- Isoler preprod et prod : un test en préproduction ne peut ni lire ni modifier les données de production, et une fuite d'identifiants de préprod n'expose pas la prod.
+- Moindre privilège : l'application n'a besoin que de lire et écrire dans sa base, pas d'administrer le cluster.
+- Secrets hors dépôt : ils ne doivent apparaître ni dans Git, ni dans les logs, ni dans la CI. Render les reçoit via ses variables d'environnement (`MONGO_URI`, en `sync: false`).
+- Le seeder est idempotent : il peut être relancé sans créer de doublon ni écraser les données.
+
+**Commandes** (valeurs jamais affichées)
+```bash
+mkdir -p ~/.exam1-secrets && chmod 700 ~/.exam1-secrets
+chmod 600 ~/.exam1-secrets/atlas.env
+openssl rand -base64 18 | tr -d '/+='            # mot de passe admin, un par environnement
+
+# Chargement ligne à ligne (les URI contiennent des "&", incompatibles avec un "source")
+cd backend
+( while IFS='=' read -r k v; do [ -n "$k" ] && export "$k=$v"; done < ~/.exam1-secrets/atlas.env
+  MONGO_URI="$MONGO_URI_PREPROD" ADMIN_EMAIL="$ADMIN_EMAIL_PREPROD" ADMIN_PASSWORD="$ADMIN_PASSWORD_PREPROD" npm run seed )
+# idem avec les variables _PROD
+```
+
+Résultat : `Produits vérifiés {inserted: 5, total: 5}` et `Compte admin créé` sur chaque base ; vérification : `exam1_preprod | produits: 5 | admins: 1` et `exam1_prod | produits: 5 | admins: 1`.
+
 ---
 
 ## Variables d'environnement par service

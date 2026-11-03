@@ -8,6 +8,7 @@ et le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 ## [Unreleased]
 
 ### Ajouté
+- Seed des bases Atlas `exam1_preprod` et `exam1_prod` (5 produits et 1 compte admin chacune), avec un utilisateur Atlas à moindre privilège par environnement et des secrets stockés hors du dépôt.
 - Pipeline GitHub Actions `.github/workflows/ci-cd.yml` : vérification des services Node (npm ci, node --check, npm audit), tests et build du frontend, test d'intégration docker compose, publication des images sur ghcr.io (tags `preprod`/`prod` + SHA court), déploiement facultatif par Deploy Hooks Render.
 - Blueprint Render `render.yaml` : projet `exam1`, environnements `preprod` (develop) et `prod` (main), frontend en Static Site et 4 web services Docker gratuits à Francfort, déploiement automatique seulement si les checks passent.
 - Champ `appEnv` (variable `APP_ENV` : local, preprod, prod) dans les réponses `/health`.
