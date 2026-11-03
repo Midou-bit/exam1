@@ -1,10 +1,13 @@
 {
   "scripts": {
-    "start:notifications": "nodemon microservices/notifications/index.js",
-    "start:stock-management": "nodemon microservices/stock-management/index.js",
-    "start:gateway": "nodemon gateway/server.js",
-    "start:backend": "nodemon backend/server.js",
+    "start:notifications": "node --watch microservices/notifications/index.js",
+    "start:stock-management": "node --watch microservices/stock-management/index.js",
+    "start:gateway": "node --watch gateway/server.js",
+    "start:backend": "node --watch backend/server.js",
     "start:frontend": "npm --prefix frontend start",
     "start:all": "npm-run-all --parallel start:notifications start:stock-management start:gateway start:backend start:frontend"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
   }
 }
