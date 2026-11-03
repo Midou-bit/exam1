@@ -8,6 +8,10 @@ et le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 ## [Unreleased]
 
 ### Ajouté
+- Pipeline GitHub Actions `.github/workflows/ci-cd.yml` : vérification des services Node (npm ci, node --check, npm audit), tests et build du frontend, test d'intégration docker compose, publication des images sur ghcr.io (tags `preprod`/`prod` + SHA court), déploiement facultatif par Deploy Hooks Render.
+- Blueprint Render `render.yaml` : projet `exam1`, environnements `preprod` (develop) et `prod` (main), frontend en Static Site et 4 web services Docker gratuits à Francfort, déploiement automatique seulement si les checks passent.
+- Champ `appEnv` (variable `APP_ENV` : local, preprod, prod) dans les réponses `/health`.
+- Test de fumée du frontend : l'application démarre et affiche « Mon Application ».
 - Endpoint `GET /health` sur backend, gateway, notifications et stock-management (JSON `status`, `service`, `env`, `uptime`) ; le backend renvoie aussi l'état MongoDB et répond 503 s'il n'est pas connecté.
 - Journalisation Winston (`logger.js` par service) : JSON horodaté, niveau via `LOG_LEVEL`, sortie console + `logs/error.log` et `logs/combined.log`.
 - Audit HTTP avec morgan branché sur Winston (méthode, URL, statut, durée, IP).
@@ -21,6 +25,8 @@ et le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 - Documentation de mise en production : `docs/DEPLOIEMENT.md`.
 
 ### Modifié
+- `Register.js` : les erreurs d'inscription s'affichent dans le formulaire (`setError`) au lieu d'une alerte ; corrige le warning ESLint qui bloquait le build en CI.
+- Appel de notification lors d'une commande limité à 5 s : un SMTP lent ou bloqué (Render gratuit) ne retarde plus la commande, l'échec reste journalisé en `warn`.
 - Plus aucune URL ni port en dur : chaque service écoute sur `PORT` (imposé par Render) puis sur son port historique (5000, 8000 via `GATEWAY_PORT`, 4002 via `NOTIFI_PORT`, 4003).
 - Les URLs des microservices de la gateway (`NOTIFI_SERVICE_URL`, `STOCK_SERVICE_URL`) ont une valeur locale par défaut.
 - Chaque service charge son propre `.env` (chemin relatif au fichier), quel que soit le dossier de lancement.
@@ -31,6 +37,7 @@ et le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 - `console.log` / `console.error` remplacés par le logger Winston dans le backend, la gateway et les microservices.
 
 ### Supprimé
+- Test obsolète « learn react » de Create React App.
 - Dépôt Git imbriqué `frontend/.git` (le frontend aurait été poussé comme un sous-module vide).
 - URL morte `http://localhost:3001/notify` dans `adminController.js` (remplacée par `GATEWAY_URL`).
 - Adresse email codée en dur dans `orderController.js` (remplacée par `NOTIFY_ADMIN_EMAIL`).

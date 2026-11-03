@@ -176,15 +176,80 @@ git branch main develop
 git log --format='%an <%ae>' | sort -u   # un seul auteur attendu
 ```
 
+## Étape 9 — Déblocage de la CI
+
+**Fait**
+- `Register.js` : le message d'erreur s'affiche dans le formulaire via `setError` (la variable était déclarée mais jamais utilisée).
+- `App.test.js` : le test généré par CRA (« learn react ») est remplacé par un test de fumée qui monte l'application avec `CartProvider` et vérifie l'affichage de « Mon Application ». axios est simulé : aucun appel réseau pendant le test.
+- `/health` renvoie `appEnv` (variable `APP_ENV` : `local`, `preprod`, `prod`).
+- Notification de commande : timeout de 5 s sur l'appel à la gateway.
+
+**Pourquoi**
+- En CI, `CI=true` transforme les warnings ESLint en erreurs : un seul warning bloque le build, donc tout le pipeline.
+- Un test qui échoue en permanence ne protège rien ; un test de fumée vérifie au minimum que l'application démarre.
+- `appEnv` permet de voir dans Uptime Kuma quel environnement répond (une préprod branchée par erreur sur la prod se repère tout de suite).
+- Render gratuit bloque le SMTP sortant : sans timeout, l'envoi d'email pourrait faire attendre l'utilisateur plusieurs minutes. L'échec est journalisé en `warn` et la commande est quand même enregistrée (201).
+
+**Commandes**
+```bash
+cd frontend
+CI=true npm test -- --watchAll=false                                       # 1 test passé
+CI=true REACT_APP_API_URL=https://api.example.invalid/api npm run build    # Compiled successfully
+```
+
+## Étape 10 — Pipeline CI/CD GitHub Actions
+
+Fichier : `.github/workflows/ci-cd.yml`. Il se déclenche sur les push et les pull requests vers `develop` et `main`. Un nouveau push annule le run en cours sur la même branche (`concurrency`).
+
+| Job | Rôle | Quand |
+|---|---|---|
+| `backend-services` (matrice x4) | `npm ci`, `node --check` sur tous les .js, `npm audit --audit-level=critical` (informatif) | toujours |
+| `frontend` | `npm ci`, tests, build avec `CI=true` | toujours |
+| `integration` | génère des `.env` factices depuis les `.env.example`, `docker compose up --build --wait`, `curl -f` des 4 `/health` et du front, logs si échec, `down` | après les 2 jobs précédents |
+| `docker-push` (matrice x5) | build et push sur `ghcr.io/<owner>/<repo>-<service>` avec les tags `preprod`/`prod` + SHA court | push sur develop/main uniquement |
+| `deploy` | appelle le Deploy Hook Render s'il est défini en secret (`RENDER_DEPLOY_HOOK_PREPROD` / `_PROD`), sinon "skipped" | après `docker-push` |
+
+**Pourquoi**
+- Chaque modification est vérifiée automatiquement avant d'atteindre un environnement : syntaxe, dépendances, tests, build, et démarrage réel de toute la stack.
+- Le test d'intégration rejoue en CI ce qui a été validé en local : si un conteneur ne passe pas healthy, le pipeline échoue et affiche les logs.
+- Les images versionnées (tag d'environnement + SHA) sont traçables et permettent un retour arrière sur une version précise.
+- Aucun vrai secret dans la CI : seules des valeurs factices sont générées ; ghcr.io utilise le `GITHUB_TOKEN` éphémère.
+- Render déploie depuis le dépôt dès que tous les checks du commit sont verts (`checksPass`) : c'est la CI qui conditionne la mise en production. Les Deploy Hooks ne sont qu'une alternative ; si tu les utilises, passe `autoDeployTrigger` à `off` pour éviter un double déploiement.
+
+## Étape 11 — Infrastructure en code (Blueprint Render)
+
+Fichier : `render.yaml` (syntaxe vérifiée sur https://render.com/docs/blueprint-spec).
+
+- Projet `exam1`, avec deux environnements : `preprod` (branche `develop`) et `prod` (branche `main`).
+- Par environnement :
+  - un Static Site `midou-exam1-<env>-frontend` (`rootDir: frontend`, `npm ci && npm run build`, publication de `build`, réécriture `/*` vers `/index.html`, en-têtes `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`) ;
+  - 4 web services Docker gratuits à Francfort, avec `healthCheckPath: /health`, `autoDeployTrigger: checksPass`, et un `buildFilter` pour ne reconstruire un service que si son dossier change.
+- Variables :
+  - non secrètes en clair (`NODE_ENV`, `APP_ENV`, `LOG_LEVEL`, URLs publiques entre services) ;
+  - secrets en `sync: false`, saisis dans le dashboard (`MONGO_URI`, `NOTIFY_ADMIN_EMAIL`, `EMAIL_USER`, `EMAIL_APPLICATION_PASSWORD`) ;
+  - `JWT_SECRET` en `generateValue: true`.
+
+**Pourquoi / adaptations à la doc**
+- L'infrastructure est décrite, versionnée et reproductible : recréer les deux environnements revient à rejouer le Blueprint.
+- `fromService` ne fournit que l'hôte du réseau privé (`host`, `hostport`), et les instances gratuites ne reçoivent pas le trafic privé. Les liens entre services utilisent donc les URLs publiques `https://<nom>.onrender.com`. Un Static Site ne peut d'ailleurs pas être référencé par `fromService`.
+- `region` et `plan` ne sont pas acceptés pour un Static Site (servi par un CDN mondial) : ils ne sont définis que sur les services Docker.
+- `JWT_SECRET` est généré par Render (valeur aléatoire de 256 bits, différente par service, donc par environnement) plutôt que saisi à la main.
+- Chaque environnement pointe vers sa propre base Atlas (`exam1_preprod`, `exam1_prod`) via son `MONGO_URI`.
+
+**Limites de l'offre gratuite**
+- Les services s'endorment après 15 min d'inactivité ; le premier appel prend environ une minute.
+- Le quota est de 750 h d'instance par mois pour tout le workspace. 8 services maintenus éveillés en continu le dépasseraient en 4 jours environ : il faut espacer les sondes Uptime Kuma, ou ne garder la supervision continue que pendant la démonstration.
+- Le SMTP sortant est bloqué : les emails échouent (journalisés en `warn`).
+
 ---
 
 ## Variables d'environnement par service
 
 | Service | Variables |
 |---|---|
-| backend | `NODE_ENV`, `PORT`, `MONGO_URI`, `JWT_SECRET`, `GATEWAY_URL`, `NOTIFY_ADMIN_EMAIL`, `CORS_ORIGIN`, `LOG_LEVEL`, `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (seed) |
-| gateway | `NODE_ENV`, `PORT`, `GATEWAY_PORT`, `NOTIFI_SERVICE_URL`, `STOCK_SERVICE_URL`, `LOG_LEVEL` (`AUTH_SERVICE_URL` non utilisée) |
-| notifications | `NODE_ENV`, `PORT`, `NOTIFI_PORT`, `EMAIL_USER`, `EMAIL_APPLICATION_PASSWORD`, `LOG_LEVEL` |
-| stock-management | `NODE_ENV`, `PORT`, `LOG_LEVEL` |
+| backend | `NODE_ENV`, `APP_ENV`, `PORT`, `MONGO_URI`, `JWT_SECRET`, `GATEWAY_URL`, `NOTIFY_ADMIN_EMAIL`, `CORS_ORIGIN`, `LOG_LEVEL`, `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (seed) |
+| gateway | `NODE_ENV`, `APP_ENV`, `PORT`, `GATEWAY_PORT`, `NOTIFI_SERVICE_URL`, `STOCK_SERVICE_URL`, `LOG_LEVEL` (`AUTH_SERVICE_URL` non utilisée) |
+| notifications | `NODE_ENV`, `APP_ENV`, `PORT`, `NOTIFI_PORT`, `EMAIL_USER`, `EMAIL_APPLICATION_PASSWORD`, `LOG_LEVEL` |
+| stock-management | `NODE_ENV`, `APP_ENV`, `PORT`, `LOG_LEVEL` |
 | frontend (build) | `REACT_APP_API_URL` |
 | racine (compose) | `REACT_APP_API_URL`, `CORS_ORIGIN` |
