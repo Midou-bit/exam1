@@ -84,6 +84,15 @@ jobs:
           done
           curl -fsS -o /dev/null http://localhost:3000/
           curl -fsS -o /dev/null http://localhost:3000/cart
+      - name: Seed local et tests de non-régression sécurité
+        env:
+          # Valeurs factices propres à la CI (base jetable)
+          ADMIN_USERNAME: admin
+          ADMIN_PASSWORD: Ci-Admin-Pass-1
+          INTERNAL_API_KEY: dev-internal-key-local
+        run: |
+          docker compose exec -T -e ADMIN_USERNAME="$ADMIN_USERNAME" -e ADMIN_EMAIL=admin@ci.local -e ADMIN_PASSWORD="$ADMIN_PASSWORD" backend node seeder.js
+          bash scripts/security-smoke.sh
       - name: Logs en cas d'échec
         if: failure()
         run: docker compose ps && docker compose logs
