@@ -15,6 +15,9 @@ docker-compose.override.yml
 logs/
 *.log
 
+# Environnement Python (scripts de supervision)
+.venv/
+
 # IDE
 .vscode/
 .idea/
