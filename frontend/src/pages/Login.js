@@ -1,4 +1,7 @@
-// src/pages/Login.js
+/**
+ * Login : formulaire de connexion. En cas de succès, stocke token, username et role dans le localStorage
+ * puis redirige vers l'accueil. Pas de props.
+ */
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";

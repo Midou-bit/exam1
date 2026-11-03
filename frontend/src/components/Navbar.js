@@ -1,4 +1,7 @@
-// src/components/Navbar.js
+/**
+ * Navbar : titre, salutation de l'utilisateur connecté, lien Panier (nombre de lignes), Connexion / Inscription ou Déconnexion.
+ * Contexte : useCart (cart, dispatch). Pas de props.
+ */
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';

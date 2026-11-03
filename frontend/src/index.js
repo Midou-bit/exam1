@@ -1,3 +1,7 @@
+/**
+ * Point d'entrée : monte l'application dans le CartProvider (état du panier partagé)
+ * et installe l'intercepteur axios de fin de session.
+ */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';

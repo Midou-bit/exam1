@@ -1,3 +1,7 @@
+/**
+ * ShippingAddress : formulaire d'adresse de livraison. Chaque saisie met à jour le contexte (SET_SHIPPING_ADDRESS)
+ * et un état local qui garde les champs contrôlés. Contexte : useCart (shippingAddress, dispatch). Pas de props.
+ */
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 

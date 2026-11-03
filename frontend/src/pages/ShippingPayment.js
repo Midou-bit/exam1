@@ -1,3 +1,7 @@
+/**
+ * ShippingPayment : étape Livraison et paiement (adresse, méthode de livraison, mode de paiement), puis passage à /order.
+ * Pas de props.
+ */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ShippingMethodSelection from '../components/ShippingMethodSelection';

@@ -1,4 +1,7 @@
-// src/components/ProtectedRoute.js
+/**
+ * ProtectedRoute : redirige vers /login si aucun token n'est présent dans le localStorage.
+ * Props : children (contenu protégé).
+ */
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 

@@ -1,4 +1,7 @@
-// src/pages/Register.js
+/**
+ * Register : formulaire d'inscription. Les erreurs renvoyées par l'API (validation 400, doublon 409)
+ * s'affichent dans le formulaire. Pas de props.
+ */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';

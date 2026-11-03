@@ -1,3 +1,7 @@
+/**
+ * Cart : contenu du panier (quantités +/-, retrait, vidage) et accès à l'étape Livraison et paiement.
+ * Contexte : useCart (cart, dispatch). Pas de props.
+ */
 import React from 'react';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';

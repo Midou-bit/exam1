@@ -1,4 +1,7 @@
-// src/pages/ProductList.js
+/**
+ * ProductList : catalogue des produits (GET /api/products) avec ajout au panier.
+ * Contexte : useCart (dispatch → ADD_TO_CART). Pas de props.
+ */
 import React, { useEffect, useState } from 'react';
 import { fetchProducts } from '../services/api';
 import { useCart } from '../context/CartContext';

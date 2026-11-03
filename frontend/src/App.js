@@ -1,4 +1,7 @@
-// src/App.js
+/**
+ * Routeur de l'application (react-router 6) : layout commun (Navbar + contenu) et routes.
+ * /order est réservé aux utilisateurs connectés (ProtectedRoute), /admin aux administrateurs (AdminRoute).
+ */
 import React from 'react';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar';

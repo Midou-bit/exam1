@@ -1,3 +1,7 @@
+/**
+ * ShippingMethodSelection : liste des méthodes de livraison (Colissimo, Chronopost).
+ * Contexte : useCart (shippingMethod, dispatch → SET_SHIPPING_METHOD). Pas de props.
+ */
 import { useCart } from '../context/CartContext';
 
  const ShippingMethodSelection = () => {

@@ -1,4 +1,8 @@
-// src/components/AdminRoute.js
+/**
+ * AdminRoute : affiche ses enfants seulement si un token est présent et que le rôle stocké est "admin",
+ * sinon redirige vers l'accueil. Contrôle d'ergonomie uniquement : l'API vérifie le rôle à chaque appel.
+ * Props : children (contenu protégé).
+ */
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 

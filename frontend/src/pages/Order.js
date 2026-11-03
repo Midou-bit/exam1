@@ -1,3 +1,8 @@
+/**
+ * Order : synthèse de la commande et confirmation. Vérifie côté client que le panier, l'adresse,
+ * la livraison et le paiement sont renseignés avant l'appel à l'API (qui revalide tout et recalcule les prix).
+ * Contexte : useCart. Pas de props.
+ */
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
@@ -16,6 +21,7 @@ const Order = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validation côté client (confort) : l'API applique ses propres règles (Joi) et recalcule le total
     // Vérifier les champs manquants
     const missingFields = [];
     if (cart.length === 0) missingFields.push("panier");
@@ -49,6 +55,7 @@ const Order = () => {
 
     try {
       // Créer la commande seulement si toutes les vérifications passent
+      // price et total sont envoyés pour information : le serveur les ignore et relit les prix en base
       const orderDetails = {
         items: cart.map((item) => ({
           productId: item.id,

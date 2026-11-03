@@ -1,3 +1,7 @@
+/**
+ * PaymentMethodSelection : liste des modes de paiement (valeurs identiques à l'enum du modèle Order côté API).
+ * Contexte : useCart (paymentMethod, dispatch → SET_PAYMENT_METHOD). Pas de props.
+ */
 import { useCart } from '../context/CartContext';
 
 const PaymentMethodSelection = () => {

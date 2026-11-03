@@ -1,4 +1,6 @@
-// src/services/api.js
+/**
+ * Appels API publics et utilisateur (produits, création de commande avec le token Bearer).
+ */
 import axios from 'axios';
 import { API_URL } from '../config';
 

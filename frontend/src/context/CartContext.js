@@ -1,9 +1,16 @@
+/**
+ * CartContext : état global du panier et des informations de commande (useReducer).
+ * État : cart, shippingMethod, paymentMethod, shippingAddress. Non persisté : perdu au rechargement de la page.
+ * Exports : cartReducer, CartProvider (props : children), useCart().
+ */
 import React, { createContext, useContext, useReducer } from "react";
 
 const CartContext = createContext();
 
+// Réducteur pur : chaque action renvoie un nouvel état, l'état précédent n'est jamais modifié
 export const cartReducer = (state, action) => {
   switch (action.type) {
+    // Ajout : incrémente la quantité si le produit est déjà présent (aussi utilisé par le bouton +)
     case "ADD_TO_CART":
       const existingProductIndex = state.cart.findIndex(
         (item) => item.id === action.payload.id

@@ -1,4 +1,6 @@
-// src/services/adminApi.js
+/**
+ * Appels API d'administration (commandes, statuts, stocks), avec le token Bearer de l'administrateur.
+ */
 import axios from "axios";
 import { API_URL } from "../config";
 

@@ -1,4 +1,7 @@
-// src/pages/Admin.js
+/**
+ * Admin : gestion des commandes (changement de statut, validation, détails) et des stocks.
+ * Appels via services/adminApi (token admin requis côté API). Pas de props.
+ */
 import React, { useState, useEffect } from "react";
 import {
   getOrders,
