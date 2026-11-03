@@ -15,6 +15,13 @@ exports.errorHandler = (err, req, res, next) => {
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ message: 'Corps JSON invalide' });
   }
+  // BUG-07 : identifiant mal formé ou données refusées par le modèle → 400
+  if (err.name === 'CastError') {
+    return res.status(400).json({ message: 'Identifiant invalide' });
+  }
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({ message: Object.values(err.errors).map((e) => e.message).join(' ; ') });
+  }
   const dbDown = DB_ERRORS.has(err.name) || mongoose.connection.readyState !== 1;
   logger.error('Erreur non gérée', { error: err.message, name: err.name, url: req.originalUrl });
   if (dbDown) {
