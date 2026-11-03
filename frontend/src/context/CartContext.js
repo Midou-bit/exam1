@@ -10,9 +10,12 @@ export const cartReducer = (state, action) => {
       );
 
       if (existingProductIndex >= 0) {
-        const updatedCart = [...state.cart];
-        updatedCart[existingProductIndex].quantity +=
-          action.payload.quantity || 1;
+        // BUG-09 : nouvel objet article (l'état précédent n'est jamais modifié)
+        const updatedCart = state.cart.map((item, index) =>
+          index === existingProductIndex
+            ? { ...item, quantity: item.quantity + (action.payload.quantity || 1) }
+            : item
+        );
         return { ...state, cart: updatedCart };
       } else {
         return {
