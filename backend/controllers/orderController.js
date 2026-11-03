@@ -199,9 +199,15 @@ exports.createOrder = async (req, res, next) => {
 //     }
 //   };
 
+// BUG-04 : suppression réelle de la commande (identifiant dans l'URL), toujours une réponse
 exports.deleteOrder = async(req, res)=>{
-    const { orderId } = req.body;
-    logger.info('Demande de suppression de commande', { orderId })
+    const { id } = req.params;
+    const order = await Order.findByIdAndDelete(id);
+    if (!order) {
+      return res.status(404).json({ message: "Commande non trouvée." });
+    }
+    logger.info('Commande supprimée', { orderId: id, by: req.user.userId });
+    res.status(200).json({ message: `Commande ${id} supprimée.` });
 }
 
 exports.getOrders = async(req, res)=>{
