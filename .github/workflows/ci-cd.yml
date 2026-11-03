@@ -1,0 +1,154 @@
+# CI/CD : vérifications, test d'intégration Docker, publication des images et déploiement Render
+name: CI/CD
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+# Un seul run par branche : un nouveau push annule le run en cours
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend-services:
+    name: backend-services (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, gateway, microservices/notifications, microservices/stock-management]
+    defaults:
+      run:
+        working-directory: ${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ matrix.service }}/package-lock.json
+      - run: npm ci
+      - name: Vérification de syntaxe (node --check)
+        run: find . -name '*.js' -not -path './node_modules/*' -print -exec node --check {} \;
+      - name: Audit des dépendances (informatif)
+        run: npm audit --audit-level=critical
+        continue-on-error: true
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Tests
+        run: npm test -- --watchAll=false
+      - name: Build
+        run: npm run build
+        env:
+          REACT_APP_API_URL: https://api.ci.invalid/api
+
+  integration:
+    needs: [backend-services, frontend]
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_hook_set: ${{ steps.hook.outputs.set }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Génération des .env à partir des .env.example (valeurs factices)
+        run: |
+          for example in $(git ls-files '*.env.example'); do
+            sed -E 's/^(JWT_SECRET|EMAIL_USER|EMAIL_APPLICATION_PASSWORD|NOTIFY_ADMIN_EMAIL|ADMIN_USERNAME|ADMIN_EMAIL|ADMIN_PASSWORD)=$/\1=ci-factice/' \
+              "$example" > "${example%.example}"
+          done
+      - name: Démarrage de la stack (attend que tous les services soient healthy)
+        run: docker compose up --build -d --wait --wait-timeout 240
+      - name: Sondes /health et frontend
+        run: |
+          for port in 5000 8000 4002 4003; do
+            curl -fsS "http://localhost:$port/health"; echo
+          done
+          curl -fsS -o /dev/null http://localhost:3000/
+          curl -fsS -o /dev/null http://localhost:3000/cart
+      - name: Logs en cas d'échec
+        if: failure()
+        run: docker compose ps && docker compose logs
+      - name: Arrêt de la stack
+        if: always()
+        run: docker compose down -v
+      - name: Présence d'un Deploy Hook Render pour cette branche
+        id: hook
+        env:
+          HOOK: ${{ github.ref_name == 'main' && secrets.RENDER_DEPLOY_HOOK_PROD || secrets.RENDER_DEPLOY_HOOK_PREPROD }}
+        run: echo "set=$([ -n "$HOOK" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+  docker-push:
+    needs: integration
+    if: github.event_name == 'push' && (github.ref_name == 'develop' || github.ref_name == 'main')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: backend
+            context: backend
+          - name: gateway
+            context: gateway
+          - name: notifications
+            context: microservices/notifications
+          - name: stock-management
+            context: microservices/stock-management
+          - name: frontend
+            context: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Calcul des tags (preprod pour develop, prod pour main, + SHA court)
+        id: meta
+        run: |
+          ENV_TAG=$([ "$GITHUB_REF_NAME" = "main" ] && echo prod || echo preprod)
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}-${{ matrix.name }}"
+          echo "tags=$IMAGE:$ENV_TAG,$IMAGE:${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "api_url=https://midou-exam1-$ENV_TAG-backend.onrender.com/api" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          # Utilisé seulement par l'image frontend
+          build-args: REACT_APP_API_URL=${{ steps.meta.outputs.api_url }}
+
+  # Facultatif : Render déploie déjà seul quand les checks passent (autoDeployTrigger: checksPass).
+  # Ce job ne s'exécute que si un Deploy Hook est défini en secret ; sinon il apparaît "skipped".
+  deploy:
+    needs: [integration, docker-push]
+    if: needs.integration.outputs.deploy_hook_set == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'preprod' }}
+    steps:
+      - name: Appel du Deploy Hook Render
+        env:
+          HOOK: ${{ github.ref_name == 'main' && secrets.RENDER_DEPLOY_HOOK_PROD || secrets.RENDER_DEPLOY_HOOK_PREPROD }}
+        run: curl -fsS -X POST "$HOOK" > /dev/null && echo "Déploiement Render déclenché"
