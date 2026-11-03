@@ -1,7 +1,17 @@
 {
   "source": {
-    "include": ["controllers", "middlewares", "validators", "config", "seeder.js", "logger.js", "server.js",
-                "../gateway", "../microservices/notifications", "../microservices/stock-management"],
+    "include": [
+      "controllers",
+      "middlewares",
+      "validators",
+      "config",
+      "seeder.js",
+      "logger.js",
+      "server.js",
+      "../gateway",
+      "../microservices/notifications",
+      "../microservices/stock-management"
+    ],
     "includePattern": "\\.js$",
     "excludePattern": "(^|\\/|\\\\)(node_modules|logs|\\.venv)(\\/|\\\\)"
   },

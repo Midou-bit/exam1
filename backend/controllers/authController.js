@@ -24,7 +24,6 @@ exports.login = async (req, res, next) => {
   // Jamais de mot de passe ni de token dans les logs
   logger.debug('Tentative de connexion', { username });
 
-
   try {
     const user = await User.findOne({ username });
     // SEC-07 : même réponse pour un utilisateur inconnu et un mauvais mot de passe
@@ -34,7 +33,9 @@ exports.login = async (req, res, next) => {
       return res.status(401).json({ message: 'Identifiants invalides' });
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
     logger.info('Connexion réussie', { username: user.username });
 
     res.json({ token, role: user.role, username: user.username });
@@ -43,7 +44,6 @@ exports.login = async (req, res, next) => {
     next(error);
   }
 };
-
 
 /**
  * @description Crée un compte utilisateur (rôle user), mot de passe hashé par le modèle User.
@@ -56,15 +56,17 @@ exports.login = async (req, res, next) => {
  */
 exports.register = async (req, res, next) => {
   const { username, email, password } = req.body;
-  logger.debug('Tentative d\'inscription', { username });
+  logger.debug("Tentative d'inscription", { username });
 
   try {
     // BUG-05 : email ou nom d'utilisateur déjà utilisé → 409
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    
+
     if (existingUser) {
-      logger.warn('Inscription refusée : email ou nom d\'utilisateur déjà utilisé', { username });
-      return res.status(409).json({ message: 'Cet email ou ce nom d\'utilisateur est déjà utilisé.' });
+      logger.warn("Inscription refusée : email ou nom d'utilisateur déjà utilisé", { username });
+      return res
+        .status(409)
+        .json({ message: "Cet email ou ce nom d'utilisateur est déjà utilisé." });
     }
 
     // Créer un nouvel utilisateur
@@ -90,9 +92,11 @@ exports.register = async (req, res, next) => {
   } catch (error) {
     // Inscriptions simultanées : l'index unique de Mongo signale le doublon
     if (error.code === 11000) {
-      return res.status(409).json({ message: 'Cet email ou ce nom d\'utilisateur est déjà utilisé.' });
+      return res
+        .status(409)
+        .json({ message: "Cet email ou ce nom d'utilisateur est déjà utilisé." });
     }
-    logger.error('Erreur lors de l\'inscription', { error: error.message });
+    logger.error("Erreur lors de l'inscription", { error: error.message });
     next(error);
   }
 };

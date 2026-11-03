@@ -16,6 +16,18 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: ESLint (backend, gateway, microservices)
+        run: npm run lint
+
   backend-services:
     name: backend-services (${{ matrix.service }})
     runs-on: ubuntu-latest
@@ -63,7 +75,7 @@ jobs:
           REACT_APP_API_URL: https://api.ci.invalid/api
 
   integration:
-    needs: [backend-services, frontend]
+    needs: [lint, backend-services, frontend]
     runs-on: ubuntu-latest
     outputs:
       deploy_hook_set: ${{ steps.hook.outputs.set }}

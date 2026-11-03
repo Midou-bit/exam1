@@ -53,11 +53,19 @@ const router = createBrowserRouter([
       },
       {
         path: 'order',
-        element: <ProtectedRoute><Order /></ProtectedRoute>,
+        element: (
+          <ProtectedRoute>
+            <Order />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'admin',
-        element: <AdminRoute><Admin /></AdminRoute>,
+        element: (
+          <AdminRoute>
+            <Admin />
+          </AdminRoute>
+        ),
       },
     ],
   },

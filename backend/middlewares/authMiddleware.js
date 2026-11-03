@@ -13,7 +13,6 @@ const { logger } = require('../logger');
  * @returns {void} 401 JSON si le token est manquant, invalide ou expiré
  */
 exports.authenticateToken = (req, res, next) => {
-
   const token = req.headers['authorization']?.split(' ')[1];
   // SEC-09 : réponses JSON 401 que le front reconnaît pour fermer la session
   if (!token) return res.status(401).json({ error: true, message: 'Token manquant' });
@@ -27,7 +26,7 @@ exports.authenticateToken = (req, res, next) => {
       req.user = user;
       next();
     });
-  } catch (error) { 
+  } catch (error) {
     return res.status(401).json({ error: true, message: 'Token invalide ou expiré' });
   }
 };

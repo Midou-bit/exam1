@@ -8,7 +8,7 @@
  */
 module.exports = {
   'any.required': '{#label} est obligatoire',
-  'any.only': '{#label} doit être l\'une des valeurs : {#valids}',
+  'any.only': "{#label} doit être l'une des valeurs : {#valids}",
   'string.base': '{#label} doit être une chaîne de caractères',
   'string.empty': '{#label} ne peut pas être vide',
   'string.min': '{#label} doit contenir au moins {#limit} caractères',

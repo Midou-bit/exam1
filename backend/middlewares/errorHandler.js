@@ -6,7 +6,12 @@ const mongoose = require('mongoose');
 const { logger } = require('../logger');
 
 // Erreurs signalant une base de données indisponible
-const DB_ERRORS = new Set(['MongooseServerSelectionError', 'MongoServerSelectionError', 'MongoNetworkError', 'MongoNotConnectedError']);
+const DB_ERRORS = new Set([
+  'MongooseServerSelectionError',
+  'MongoServerSelectionError',
+  'MongoNetworkError',
+  'MongoNotConnectedError',
+]);
 
 // Transmet au middleware d'erreur les rejets des contrôleurs async (Express 4 ne le fait pas)
 /**
@@ -42,7 +47,11 @@ exports.errorHandler = (err, req, res, next) => {
     return res.status(400).json({ message: 'Identifiant invalide' });
   }
   if (err.name === 'ValidationError') {
-    return res.status(400).json({ message: Object.values(err.errors).map((e) => e.message).join(' ; ') });
+    return res.status(400).json({
+      message: Object.values(err.errors)
+        .map((e) => e.message)
+        .join(' ; '),
+    });
   }
   const dbDown = DB_ERRORS.has(err.name) || mongoose.connection.readyState !== 1;
   logger.error('Erreur non gérée', { error: err.message, name: err.name, url: req.originalUrl });

@@ -16,7 +16,7 @@ test("affiche le titre de l'application", async () => {
   render(
     <CartProvider>
       <App />
-    </CartProvider>
+    </CartProvider>,
   );
   expect(await screen.findByText(/Mon Application/i)).toBeInTheDocument();
 });

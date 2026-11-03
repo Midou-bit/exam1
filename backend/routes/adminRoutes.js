@@ -1,11 +1,11 @@
 // backend/routes/adminRoutes.js
 const express = require('express');
-const { 
-    getOrders, 
-    updateOrderStatus, 
-    validateOrder, 
-    getProducts, 
-    updateProductStock 
+const {
+  getOrders,
+  updateOrderStatus,
+  validateOrder,
+  getProducts,
+  updateProductStock,
 } = require('../controllers/adminController');
 const { authenticateToken, isAdmin } = require('../middlewares/authMiddleware');
 

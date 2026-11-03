@@ -26,7 +26,10 @@ module.exports = (req, res, next) => {
   const provided = req.get('x-internal-key');
   // Refus par défaut si la clé n'est pas configurée
   if (!expected || !provided || !crypto.timingSafeEqual(digest(provided), digest(expected))) {
-    logger.warn('Requête interne refusée (clé absente ou invalide)', { ip: req.ip, url: req.originalUrl });
+    logger.warn('Requête interne refusée (clé absente ou invalide)', {
+      ip: req.ip,
+      url: req.originalUrl,
+    });
     return res.status(401).json({ message: 'Non autorisé' });
   }
   next();

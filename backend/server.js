@@ -13,7 +13,9 @@ const { authLimiter } = require('./middlewares/rateLimiter');
 
 // BUG-01 : aucune erreur asynchrone ne doit arrêter le processus sans trace
 process.on('unhandledRejection', (reason) => {
-  logger.error('Promesse rejetée non gérée', { error: reason instanceof Error ? reason.message : String(reason) });
+  logger.error('Promesse rejetée non gérée', {
+    error: reason instanceof Error ? reason.message : String(reason),
+  });
 });
 // Après une exception non interceptée, l'état est incertain : on journalise puis on laisse l'hébergeur redémarrer
 process.on('uncaughtException', (err) => {
@@ -28,7 +30,9 @@ connectDB();
 app.set('trust proxy', 1);
 app.use(helmet());
 // CORS limité aux origines autorisées (liste séparée par des virgules)
-const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',').map((o) => o.trim());
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+  .split(',')
+  .map((o) => o.trim());
 app.use(cors({ origin: allowedOrigins }));
 app.use(httpLogger);
 app.use(express.json());

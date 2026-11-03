@@ -12,7 +12,7 @@ import './services/authSession';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-    <CartProvider>
+  <CartProvider>
     <App />
-    </CartProvider>
+  </CartProvider>,
 );

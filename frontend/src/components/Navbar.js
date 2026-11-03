@@ -25,17 +25,15 @@ const Navbar = () => {
   return (
     <nav className="bg-blue-500 text-white p-4 flex justify-between items-center">
       <div className="flex items-center space-x-4">
-        <Link to="/" className="text-xl font-bold">Mon Application</Link>
+        <Link to="/" className="text-xl font-bold">
+          Mon Application
+        </Link>
       </div>
-      
+
       <div className="flex items-center space-x-4">
         {/* Afficher le nom de l'utilisateur s'il est connecté */}
-        {isAuthenticated && (
-          <span className="font-semibold">
-            Bonjour, {username}
-          </span>
-        )}
-        
+        {isAuthenticated && <span className="font-semibold">Bonjour, {username}</span>}
+
         {/* Lien vers le Panier avec le nombre d'articles */}
         <Link to="/cart" className="relative">
           <span>Panier</span>
@@ -45,7 +43,7 @@ const Navbar = () => {
             </span>
           )}
         </Link>
-        
+
         {/* Lien Connexion / Déconnexion */}
         {!isAuthenticated ? (
           <>

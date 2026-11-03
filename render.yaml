@@ -29,7 +29,7 @@ projects:
             envVars:
               # Même version de Node que la CI
               - key: NODE_VERSION
-                value: "20"
+                value: '20'
               - key: REACT_APP_API_URL
                 value: https://midou-exam1-preprod-backend.onrender.com/api
             routes:
@@ -169,7 +169,7 @@ projects:
             envVars:
               # Même version de Node que la CI
               - key: NODE_VERSION
-                value: "20"
+                value: '20'
               - key: REACT_APP_API_URL
                 value: https://midou-exam1-prod-backend.onrender.com/api
             routes:

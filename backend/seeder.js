@@ -70,13 +70,20 @@ const seedAdmin = async () => {
     logger.warn('Variables ADMIN_* absentes : compte admin non créé');
     return;
   }
-  const existing = await User.findOne({ $or: [{ username: ADMIN_USERNAME }, { email: ADMIN_EMAIL }] });
+  const existing = await User.findOne({
+    $or: [{ username: ADMIN_USERNAME }, { email: ADMIN_EMAIL }],
+  });
   if (existing) {
     logger.info('Compte admin déjà présent, aucune création', { username: existing.username });
     return;
   }
   // Le hook pre('save') du modèle User hashe le mot de passe
-  await new User({ username: ADMIN_USERNAME, email: ADMIN_EMAIL, password: ADMIN_PASSWORD, role: 'admin' }).save();
+  await new User({
+    username: ADMIN_USERNAME,
+    email: ADMIN_EMAIL,
+    password: ADMIN_PASSWORD,
+    role: 'admin',
+  }).save();
   logger.info('Compte admin créé', { username: ADMIN_USERNAME });
 };
 

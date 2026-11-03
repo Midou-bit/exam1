@@ -8,7 +8,12 @@ const { stockSchema } = require('../validators/productValidators');
 
 const router = express.Router();
 router.get('/', asyncHandler(getProducts));
-router.put("/:productId/stock", authenticateToken, isAdmin, validate(stockSchema), asyncHandler(updateProductStock));
-
+router.put(
+  '/:productId/stock',
+  authenticateToken,
+  isAdmin,
+  validate(stockSchema),
+  asyncHandler(updateProductStock),
+);
 
 module.exports = router;

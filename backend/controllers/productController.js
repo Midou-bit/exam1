@@ -14,8 +14,8 @@ const { logger } = require('../logger');
  * @throws {Error} Erreur base de données (via asyncHandler, 503 si indisponible)
  */
 exports.getProducts = async (req, res) => {
-    const products = await Product.find();
-    res.json(products);
+  const products = await Product.find();
+  res.json(products);
 };
 
 /**
@@ -28,27 +28,27 @@ exports.getProducts = async (req, res) => {
  * @throws {Error} Erreur base de données, transmise à next
  */
 exports.updateProductStock = async (req, res, next) => {
-    try {
-      const { stock } = req.body;
-      const {productId} = req.params;
-  
-      if (stock < 0) {
-        return res.status(400).json({ message: "Le stock ne peut pas être négatif." });
-      }
-  
-      const product = await Product.findById(productId);
-      if (!product) {
-        return res.status(404).json({ message: "Produit non trouvé." });
-      }
-  
-      product.stock = stock;
-      product.updatedAt = Date.now();
-  
-      await product.save();
-  
-      res.json({ message: "Stock mis à jour avec succès.", product });
-    } catch (error) {
-      logger.error('Erreur lors de la mise à jour du stock', { error: error.message });
-      next(error);
+  try {
+    const { stock } = req.body;
+    const { productId } = req.params;
+
+    if (stock < 0) {
+      return res.status(400).json({ message: 'Le stock ne peut pas être négatif.' });
     }
-  };
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Produit non trouvé.' });
+    }
+
+    product.stock = stock;
+    product.updatedAt = Date.now();
+
+    await product.save();
+
+    res.json({ message: 'Stock mis à jour avec succès.', product });
+  } catch (error) {
+    logger.error('Erreur lors de la mise à jour du stock', { error: error.message });
+    next(error);
+  }
+};

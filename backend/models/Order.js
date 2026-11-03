@@ -63,7 +63,7 @@ const orderSchema = new mongoose.Schema(
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt fields
-  }
+  },
 );
 
 // Create the model

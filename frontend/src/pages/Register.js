@@ -39,8 +39,8 @@ const Register = () => {
         setError(message || 'Une erreur est survenue lors de la création du compte.');
       } else {
         // Erreur réseau ou autre
-        console.error("Erreur réseau ou serveur", err);
-        setError("Une erreur est survenue. Veuillez réessayer.");
+        console.error('Erreur réseau ou serveur', err);
+        setError('Une erreur est survenue. Veuillez réessayer.');
       }
       //setError('Une erreur est survenue lors de la création du compte.');
     }
@@ -75,7 +75,9 @@ const Register = () => {
           onChange={handleChange}
           className="border border-gray-300 p-2 w-full mb-4"
         />
-        <button type="submit" className="bg-blue-500 text-white p-2 w-full rounded">S'inscrire</button>
+        <button type="submit" className="bg-blue-500 text-white p-2 w-full rounded">
+          S'inscrire
+        </button>
       </form>
     </div>
   );

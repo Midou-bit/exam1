@@ -36,7 +36,13 @@ const transporter = nodemailer.createTransport({
  * @returns {void} 200 { status, service, env, appEnv, uptime }
  */
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'notifications', env: process.env.NODE_ENV || 'development', appEnv: process.env.APP_ENV || 'local', uptime: process.uptime() });
+  res.json({
+    status: 'ok',
+    service: 'notifications',
+    env: process.env.NODE_ENV || 'development',
+    appEnv: process.env.APP_ENV || 'local',
+    uptime: process.uptime(),
+  });
 });
 
 // SEC-02 : clé interne obligatoire (sauf /health)
@@ -55,8 +61,8 @@ app.post('/notify', async (req, res) => {
   logger.info('Demande de notification', { subject });
 
   //const { message } = req.body;
-    //console.log(`Notification: ${text}`);
-    //res.send('Notification envoyée mail');
+  //console.log(`Notification: ${text}`);
+  //res.send('Notification envoyée mail');
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -70,9 +76,9 @@ app.post('/notify', async (req, res) => {
     logger.info('Email envoyé avec succès', { subject });
     return res.status(200).json({ message: 'Email envoyé avec succès.' });
   } catch (error) {
-    logger.error('Erreur lors de l\'envoi de l\'email', { error: error.message });
+    logger.error("Erreur lors de l'envoi de l'email", { error: error.message });
     // SEC-08 : le détail de l'erreur SMTP reste dans les logs
-    return res.status(500).json({ message: 'Erreur lors de l\'envoi de l\'email.' });
+    return res.status(500).json({ message: "Erreur lors de l'envoi de l'email." });
   }
 });
 
@@ -81,7 +87,11 @@ app.use((req, res) => res.status(404).json({ message: 'Ressource introuvable' })
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   logger.error('Erreur non gérée', { error: err.message, url: req.originalUrl });
-  res.status(err.type === 'entity.parse.failed' ? 400 : 500).json({ message: err.type === 'entity.parse.failed' ? 'Corps JSON invalide' : 'Erreur serveur' });
+  res
+    .status(err.type === 'entity.parse.failed' ? 400 : 500)
+    .json({
+      message: err.type === 'entity.parse.failed' ? 'Corps JSON invalide' : 'Erreur serveur',
+    });
 });
 
 // Lancer le service Notification (PORT imposé par Render, sinon NOTIFI_PORT)

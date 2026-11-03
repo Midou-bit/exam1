@@ -18,7 +18,7 @@ try {
   fs.mkdirSync(logDir, { recursive: true });
   transports.push(
     new winston.transports.File({ filename: path.join(logDir, 'error.log'), level: 'error' }),
-    new winston.transports.File({ filename: path.join(logDir, 'combined.log') })
+    new winston.transports.File({ filename: path.join(logDir, 'combined.log') }),
   );
 } catch (err) {
   // Pas de fichier possible : on garde uniquement la console
@@ -33,7 +33,7 @@ const logger = winston.createLogger({
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.errors({ stack: true }),
-    winston.format.json()
+    winston.format.json(),
   ),
   defaultMeta: { service: SERVICE },
   transports,
@@ -45,18 +45,19 @@ const logger = winston.createLogger({
  * @type {express.RequestHandler}
  */
 const httpLogger = morgan(
-  (tokens, req, res) => JSON.stringify({
-    method: tokens.method(req, res),
-    url: tokens.url(req, res),
-    status: Number(tokens.status(req, res)),
-    responseTimeMs: Number(tokens['response-time'](req, res)),
-    ip: tokens['remote-addr'](req, res),
-  }),
+  (tokens, req, res) =>
+    JSON.stringify({
+      method: tokens.method(req, res),
+      url: tokens.url(req, res),
+      status: Number(tokens.status(req, res)),
+      responseTimeMs: Number(tokens['response-time'](req, res)),
+      ip: tokens['remote-addr'](req, res),
+    }),
   {
     // Les sondes /health réussies (Render, Uptime Kuma) ne polluent pas les logs
     skip: (req, res) => req.originalUrl === '/health' && res.statusCode < 400,
     stream: { write: (line) => logger.info('requete HTTP', { http: JSON.parse(line) }) },
-  }
+  },
 );
 
 module.exports = { logger, httpLogger };

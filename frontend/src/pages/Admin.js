@@ -2,14 +2,14 @@
  * Admin : gestion des commandes (changement de statut, validation, détails) et des stocks.
  * Appels via services/adminApi (token admin requis côté API). Pas de props.
  */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   getOrders,
   updateOrderStatus,
   // validateOrder,
   getProducts,
   updateProductStock,
-} from "../services/adminApi";
+} from '../services/adminApi';
 
 const Admin = () => {
   const [orders, setOrders] = useState([]);
@@ -39,13 +39,13 @@ const Admin = () => {
       // Mettre à jour l'état local après une mise à jour réussie
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          order._id === orderId ? { ...order, status: newStatus } : order
-        )
+          order._id === orderId ? { ...order, status: newStatus } : order,
+        ),
       );
 
       alert(`Statut de la commande ${orderId} mis à jour en "${newStatus}".`);
     } catch (error) {
-      alert("Erreur lors de la mise à jour du statut de la commande.");
+      alert('Erreur lors de la mise à jour du statut de la commande.');
     }
     setLoadingOrder(null); // Désactive le loader
   };
@@ -59,7 +59,7 @@ const Admin = () => {
     const stockValue = newStock[productId]; // Récupère la valeur saisie pour ce produit
 
     if (!stockValue || stockValue < 0) {
-      alert("Veuillez entrer une quantité de stock valide.");
+      alert('Veuillez entrer une quantité de stock valide.');
       return;
     }
 
@@ -70,15 +70,15 @@ const Admin = () => {
 
       // Mise à jour de l'affichage avec le nouveau stock
       const updatedProducts = products.map((product) =>
-        product._id === productId ? { ...product, stock: stockValue } : product
+        product._id === productId ? { ...product, stock: stockValue } : product,
       );
       setProducts(updatedProducts);
 
       // Réinitialisation du champ
-      setNewStock({ ...newStock, [productId]: "" });
+      setNewStock({ ...newStock, [productId]: '' });
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du stock :", error);
-      alert("Échec de la mise à jour du stock.");
+      console.error('Erreur lors de la mise à jour du stock :', error);
+      alert('Échec de la mise à jour du stock.');
     } finally {
       setUpdatingStock(null); // Désactive le loader
     }
@@ -99,32 +99,24 @@ const Admin = () => {
               <p>
                 <strong>Status :</strong> {order.status}
               </p>
-              {order.status !== "Expédiée" && (
+              {order.status !== 'Expédiée' && (
                 <button
-                  onClick={() => handleOrderStatusChange(order._id, "Expédiée")}
+                  onClick={() => handleOrderStatusChange(order._id, 'Expédiée')}
                   className="bg-blue-500 text-white px-2 py-1 mt-2 rounded mr-2"
                   disabled={loadingOrder === order._id}
                 >
-                  {loadingOrder === order._id
-                    ? "Mise à jour..."
-                    : 'Changer état à "Expédiée"'}
+                  {loadingOrder === order._id ? 'Mise à jour...' : 'Changer état à "Expédiée"'}
                 </button>
               )}
 
-              {order.status !== "En cours de traitement" &&
-                order.status !== "Expédiée" && (
-                  <button
-                    onClick={() =>
-                      handleOrderStatusChange(
-                        order._id,
-                        "En cours de traitement"
-                      )
-                    }
-                    className="bg-green-500 text-white px-2 py-1 mt-2 rounded"
-                  >
-                    Valider la commande
-                  </button>
-                )}
+              {order.status !== 'En cours de traitement' && order.status !== 'Expédiée' && (
+                <button
+                  onClick={() => handleOrderStatusChange(order._id, 'En cours de traitement')}
+                  className="bg-green-500 text-white px-2 py-1 mt-2 rounded"
+                >
+                  Valider la commande
+                </button>
+              )}
 
               <button
                 onClick={() => setSelectedOrder(order)}
@@ -160,7 +152,7 @@ const Admin = () => {
                     type="number"
                     placeholder="Nouveau stock"
                     min="0"
-                    value={newStock[product._id] || ""}
+                    value={newStock[product._id] || ''}
                     className="border p-2 w-20"
                     onChange={(e) =>
                       setNewStock({
@@ -174,9 +166,7 @@ const Admin = () => {
                     className="bg-green-500 text-white px-2 py-1 ml-2 rounded"
                     disabled={updatingStock === product._id}
                   >
-                    {updatingStock === product._id
-                      ? "Mise à jour..."
-                      : "Mettre à jour"}
+                    {updatingStock === product._id ? 'Mise à jour...' : 'Mettre à jour'}
                   </button>
                 </td>
               </tr>

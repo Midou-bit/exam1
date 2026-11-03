@@ -6,7 +6,7 @@ const axios = require('axios');
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
-const orderLog = require('debug')('orderRoutes:console')
+const orderLog = require('debug')('orderRoutes:console');
 const { logger } = require('../logger');
 
 // URL de la gateway et destinataire des notifications (variables d'environnement)
@@ -21,10 +21,12 @@ const INTERNAL_HEADERS = { 'x-internal-key': process.env.INTERNAL_API_KEY || '' 
  * @param {Array<{productId: string, quantity: number}>} items - Articles à remettre en stock
  * @returns {Promise<Array>} Résultats des mises à jour
  */
-const restoreStock = (items) => Promise.all(
-  items.map(({ productId, quantity }) => Product.updateOne({ _id: productId }, { $inc: { stock: quantity } }))
-);
-
+const restoreStock = (items) =>
+  Promise.all(
+    items.map(({ productId, quantity }) =>
+      Product.updateOne({ _id: productId }, { $inc: { stock: quantity } }),
+    ),
+  );
 
 /**
  * @description Crée une commande : prix relus en base, total recalculé, stock décrémenté de façon atomique, notification via la gateway.
@@ -37,10 +39,10 @@ const restoreStock = (items) => Promise.all(
  */
 exports.createOrder = async (req, res, next) => {
   //userLog(`user is ${JSON.stringify(req.user)}`)
-  logger.debug('createOrder', { userId: req.user.userId })
+  logger.debug('createOrder', { userId: req.user.userId });
   //const { items, shippingAddress, paymentMethod } = req.body;
-  const { items, shippingAddress, paymentMethod, shippingMethod, } = req.body;
-  logger.debug('Contenu de la commande', { items: req.body.items })
+  const { items, shippingAddress, paymentMethod, shippingMethod } = req.body;
+  logger.debug('Contenu de la commande', { items: req.body.items });
   //const { items } = req.body;
   let userId = req.user.userId;
   // let shippingAddress = {
@@ -52,18 +54,19 @@ exports.createOrder = async (req, res, next) => {
 
   // let paymentMethod =  "Carte bancaire";
 
-
   // Vérification du format des données
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({
-      message: 'Le corps de la requête doit contenir un tableau d\'objets { productId, quantity }.',
+      message: "Le corps de la requête doit contenir un tableau d'objets { productId, quantity }.",
     });
   }
 
   // SEC-01 : quantité entière >= 1 et identifiant produit valide
   for (const { productId, quantity } of items) {
     if (!Number.isInteger(quantity) || quantity < 1) {
-      return res.status(400).json({ message: 'La quantité doit être un entier supérieur ou égal à 1.' });
+      return res
+        .status(400)
+        .json({ message: 'La quantité doit être un entier supérieur ou égal à 1.' });
     }
     if (!mongoose.isValidObjectId(productId)) {
       return res.status(400).json({ message: `Identifiant de produit invalide : ${productId}` });
@@ -86,10 +89,7 @@ exports.createOrder = async (req, res, next) => {
     });
 
     // Total recalculé côté serveur
-    const total = orderDetails.reduce(
-      (acc, { price, quantity }) => acc + price * quantity,
-      0
-    );
+    const total = orderDetails.reduce((acc, { price, quantity }) => acc + price * quantity, 0);
 
     // BUG-03 : décrément atomique, uniquement si le stock est suffisant
     const decremented = [];
@@ -97,7 +97,7 @@ exports.createOrder = async (req, res, next) => {
       const updated = await Product.findOneAndUpdate(
         { _id: item.productId, stock: { $gte: item.quantity } },
         { $inc: { stock: -item.quantity } },
-        { new: true }
+        { new: true },
       );
       if (!updated) {
         await restoreStock(decremented);
@@ -113,7 +113,7 @@ exports.createOrder = async (req, res, next) => {
       total,
       shippingAddress,
       paymentMethod,
-      shippingMethod
+      shippingMethod,
     });
 
     // Sauvegarder la commande dans la base de données (stock rétabli en cas d'échec)
@@ -129,15 +129,19 @@ exports.createOrder = async (req, res, next) => {
 
     // Appel au micro-service de notification
     try {
-      await axios.post(`${GATEWAY_URL}/notify`, {
-        to: NOTIFY_ADMIN_EMAIL,
-        subject: 'Nouvelle Commande Créée',
-        text: `Une commande a été créée avec succès pour les produits suivants : \n${orderDetails
-          .map((item) => `Produit ID : ${item.productId}, Quantité : ${item.quantity}`)
-          .join('\n')}`,
-      }, { timeout: 5000, headers: INTERNAL_HEADERS }); // ne bloque jamais la commande (SMTP lent ou bloqué)
+      await axios.post(
+        `${GATEWAY_URL}/notify`,
+        {
+          to: NOTIFY_ADMIN_EMAIL,
+          subject: 'Nouvelle Commande Créée',
+          text: `Une commande a été créée avec succès pour les produits suivants : \n${orderDetails
+            .map((item) => `Produit ID : ${item.productId}, Quantité : ${item.quantity}`)
+            .join('\n')}`,
+        },
+        { timeout: 5000, headers: INTERNAL_HEADERS },
+      ); // ne bloque jamais la commande (SMTP lent ou bloqué)
     } catch (error) {
-      logger.warn('Erreur lors de l\'envoi de la notification', { error: error.message });
+      logger.warn("Erreur lors de l'envoi de la notification", { error: error.message });
     }
 
     // Appel au micro-service de gestion des stocks
@@ -162,16 +166,15 @@ exports.createOrder = async (req, res, next) => {
   }
 };
 
-
 // exports.createOrder = async (req, res) => {
 //     const products = req.body; // Attente d'un tableau d'objets { productId, quantity }
 //     console.log(`products are ${JSON.stringify(products)}`)
-    
+
 //     // // Vérification du format des données
 //     if (!Array.isArray(products.items) || products.items.length === 0) {
 //       return res.status(400).json({ message: 'Le corps de la requête doit contenir un tableau d\'objets { productId, quantity }.' });
 //     }
-  
+
 //     try {
 //     //   // Logique pour traiter chaque produit de la commande
 //       const orderDetails = products.items.map(({ productId, quantity }) => {
@@ -180,7 +183,7 @@ exports.createOrder = async (req, res, next) => {
 //       });
 
 //       //TODO : requete avec le modele order pour ajouter les commande en db
-  
+
 //     //   // Appel au micro-service de notification
 //       try {
 //         await axios.post(`${GATEWAY_URL}/notify`, {
@@ -193,7 +196,7 @@ exports.createOrder = async (req, res, next) => {
 //       } catch (error) {
 //         console.error('Erreur lors de l\'envoi de la notification', error);
 //       }
-  
+
 //       // Appel au micro-service de gestion des stocks
 //       try {
 //         await Promise.all(
@@ -204,7 +207,7 @@ exports.createOrder = async (req, res, next) => {
 //       } catch (error) {
 //         console.error('Erreur lors de la mise à jour des stocks', error);
 //       }
-  
+
 //       // Réponse de succès
 //       res.status(201).json({
 //         message: 'Commande créée avec succès',
@@ -225,15 +228,15 @@ exports.createOrder = async (req, res, next) => {
  * @returns {Promise<void>} 200 si supprimée ; 404 si absente
  * @throws {Error} Erreur base de données (via asyncHandler)
  */
-exports.deleteOrder = async(req, res)=>{
-    const { id } = req.params;
-    const order = await Order.findByIdAndDelete(id);
-    if (!order) {
-      return res.status(404).json({ message: "Commande non trouvée." });
-    }
-    logger.info('Commande supprimée', { orderId: id, by: req.user.userId });
-    res.status(200).json({ message: `Commande ${id} supprimée.` });
-}
+exports.deleteOrder = async (req, res) => {
+  const { id } = req.params;
+  const order = await Order.findByIdAndDelete(id);
+  if (!order) {
+    return res.status(404).json({ message: 'Commande non trouvée.' });
+  }
+  logger.info('Commande supprimée', { orderId: id, by: req.user.userId });
+  res.status(200).json({ message: `Commande ${id} supprimée.` });
+};
 
 /**
  * @description Liste toutes les commandes (administrateur).
@@ -243,12 +246,10 @@ exports.deleteOrder = async(req, res)=>{
  * @returns {Promise<void>} 200 tableau de commandes
  * @throws {Error} Erreur base de données (via asyncHandler)
  */
-exports.getOrders = async(req, res)=>{
-
+exports.getOrders = async (req, res) => {
   const orders = await Order.find();
-      res.status(200).json(orders);
- 
-}
+  res.status(200).json(orders);
+};
 
 // BUG-06 : la validation écrit réellement un statut de l'enum
 /**
@@ -264,13 +265,13 @@ exports.validateOrder = async (req, res) => {
   const order = await Order.findByIdAndUpdate(
     id,
     { status: 'En cours de traitement', updatedAt: new Date() },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
   if (!order) {
-    return res.status(404).json({ message: "Commande non trouvée." });
+    return res.status(404).json({ message: 'Commande non trouvée.' });
   }
   res.status(200).json({ message: `Commande ${id} validée avec succès.`, order });
-}
+};
 
 /**
  * @description Change le statut d'une commande (valeurs de l'enum uniquement).
@@ -289,21 +290,21 @@ exports.updateOrderStatus = async (req, res, next) => {
   try {
     // Vérification des données
     if (!status) {
-      return res.status(400).json({ message: "Le statut est requis." });
+      return res.status(400).json({ message: 'Le statut est requis.' });
     }
 
     // Recherche de la commande et mise à jour
     const order = await Order.findByIdAndUpdate(
       orderId,
       { status, updatedAt: new Date() }, // Mise à jour du statut et de la date de modification
-      { new: true, runValidators: true } // Retourne la commande mise à jour ; SEC-06 : enum vérifié
+      { new: true, runValidators: true }, // Retourne la commande mise à jour ; SEC-06 : enum vérifié
     );
 
     if (!order) {
-      return res.status(404).json({ message: "Commande non trouvée." });
+      return res.status(404).json({ message: 'Commande non trouvée.' });
     }
 
-    res.status(200).json({ message: "Statut mis à jour avec succès", order });
+    res.status(200).json({ message: 'Statut mis à jour avec succès', order });
   } catch (error) {
     logger.error('Erreur lors de la mise à jour de la commande', { error: error.message });
     next(error);

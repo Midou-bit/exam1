@@ -32,7 +32,13 @@ app.use(express.json());
  * @returns {void} 200 { status, service, env, appEnv, uptime }
  */
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'gateway', env: process.env.NODE_ENV || 'development', appEnv: process.env.APP_ENV || 'local', uptime: process.uptime() });
+  res.json({
+    status: 'ok',
+    service: 'gateway',
+    env: process.env.NODE_ENV || 'development',
+    appEnv: process.env.APP_ENV || 'local',
+    uptime: process.uptime(),
+  });
 });
 
 // SEC-02 : clé interne obligatoire pour toutes les routes (sauf /health)
@@ -53,7 +59,11 @@ app.use((req, res) => res.status(404).json({ message: 'Ressource introuvable' })
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   logger.error('Erreur non gérée', { error: err.message, url: req.originalUrl });
-  res.status(err.type === 'entity.parse.failed' ? 400 : 500).json({ message: err.type === 'entity.parse.failed' ? 'Corps JSON invalide' : 'Erreur serveur' });
+  res
+    .status(err.type === 'entity.parse.failed' ? 400 : 500)
+    .json({
+      message: err.type === 'entity.parse.failed' ? 'Corps JSON invalide' : 'Erreur serveur',
+    });
 });
 
 // Lancer le Gateway (PORT imposé par Render, sinon GATEWAY_PORT)
