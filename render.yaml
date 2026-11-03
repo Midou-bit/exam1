@@ -1,0 +1,271 @@
+# Infrastructure Render en code (Blueprint) : https://render.com/docs/blueprint-spec
+# Projet exam1, 2 environnements : preprod (branche develop) et prod (branche main).
+# - Déploiement automatique uniquement si les checks GitHub Actions passent (autoDeployTrigger: checksPass).
+# - Les instances gratuites ne reçoivent pas le trafic du réseau privé : les services
+#   s'appellent par leur URL publique https://<nom>.onrender.com (fromService ne donne que l'hôte privé).
+# - Secrets (sync: false) saisis dans le dashboard ; JWT_SECRET généré par Render, distinct par environnement.
+# - PORT est fourni par Render (10000) et lu par chaque service.
+
+projects:
+  - name: exam1
+    environments:
+      - name: preprod
+        services:
+          # Frontend React servi par le CDN Render (Static Site)
+          - name: midou-exam1-preprod-frontend
+            type: web
+            runtime: static
+            branch: develop
+            rootDir: frontend
+            buildCommand: npm ci && npm run build
+            staticPublishPath: build
+            autoDeployTrigger: checksPass
+            envVars:
+              # Même version de Node que la CI
+              - key: NODE_VERSION
+                value: "20"
+              - key: REACT_APP_API_URL
+                value: https://midou-exam1-preprod-backend.onrender.com/api
+            routes:
+              # Fallback SPA : /cart, /admin... renvoient index.html
+              - type: rewrite
+                source: /*
+                destination: /index.html
+            headers:
+              - path: /*
+                name: X-Frame-Options
+                value: DENY
+              - path: /*
+                name: X-Content-Type-Options
+                value: nosniff
+              - path: /*
+                name: Referrer-Policy
+                value: strict-origin-when-cross-origin
+          - name: midou-exam1-preprod-backend
+            type: web
+            runtime: docker
+            plan: free
+            region: frankfurt
+            branch: develop
+            dockerfilePath: ./backend/Dockerfile
+            dockerContext: ./backend
+            healthCheckPath: /health
+            autoDeployTrigger: checksPass
+            buildFilter:
+              paths:
+                - backend/**
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: APP_ENV
+                value: preprod
+              - key: LOG_LEVEL
+                value: info
+              - key: MONGO_URI
+                sync: false
+              - key: JWT_SECRET
+                generateValue: true
+              - key: GATEWAY_URL
+                value: https://midou-exam1-preprod-gateway.onrender.com
+              - key: CORS_ORIGIN
+                value: https://midou-exam1-preprod-frontend.onrender.com
+              - key: NOTIFY_ADMIN_EMAIL
+                sync: false
+          - name: midou-exam1-preprod-gateway
+            type: web
+            runtime: docker
+            plan: free
+            region: frankfurt
+            branch: develop
+            dockerfilePath: ./gateway/Dockerfile
+            dockerContext: ./gateway
+            healthCheckPath: /health
+            autoDeployTrigger: checksPass
+            buildFilter:
+              paths:
+                - gateway/**
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: APP_ENV
+                value: preprod
+              - key: LOG_LEVEL
+                value: info
+              - key: NOTIFI_SERVICE_URL
+                value: https://midou-exam1-preprod-notifications.onrender.com
+              - key: STOCK_SERVICE_URL
+                value: https://midou-exam1-preprod-stock-management.onrender.com
+          - name: midou-exam1-preprod-notifications
+            type: web
+            runtime: docker
+            plan: free
+            region: frankfurt
+            branch: develop
+            dockerfilePath: ./microservices/notifications/Dockerfile
+            dockerContext: ./microservices/notifications
+            healthCheckPath: /health
+            autoDeployTrigger: checksPass
+            buildFilter:
+              paths:
+                - microservices/notifications/**
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: APP_ENV
+                value: preprod
+              - key: LOG_LEVEL
+                value: info
+              - key: EMAIL_USER
+                sync: false
+              - key: EMAIL_APPLICATION_PASSWORD
+                sync: false
+          - name: midou-exam1-preprod-stock-management
+            type: web
+            runtime: docker
+            plan: free
+            region: frankfurt
+            branch: develop
+            dockerfilePath: ./microservices/stock-management/Dockerfile
+            dockerContext: ./microservices/stock-management
+            healthCheckPath: /health
+            autoDeployTrigger: checksPass
+            buildFilter:
+              paths:
+                - microservices/stock-management/**
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: APP_ENV
+                value: preprod
+              - key: LOG_LEVEL
+                value: info
+      - name: prod
+        services:
+          # Frontend React servi par le CDN Render (Static Site)
+          - name: midou-exam1-prod-frontend
+            type: web
+            runtime: static
+            branch: main
+            rootDir: frontend
+            buildCommand: npm ci && npm run build
+            staticPublishPath: build
+            autoDeployTrigger: checksPass
+            envVars:
+              # Même version de Node que la CI
+              - key: NODE_VERSION
+                value: "20"
+              - key: REACT_APP_API_URL
+                value: https://midou-exam1-prod-backend.onrender.com/api
+            routes:
+              # Fallback SPA : /cart, /admin... renvoient index.html
+              - type: rewrite
+                source: /*
+                destination: /index.html
+            headers:
+              - path: /*
+                name: X-Frame-Options
+                value: DENY
+              - path: /*
+                name: X-Content-Type-Options
+                value: nosniff
+              - path: /*
+                name: Referrer-Policy
+                value: strict-origin-when-cross-origin
+          - name: midou-exam1-prod-backend
+            type: web
+            runtime: docker
+            plan: free
+            region: frankfurt
+            branch: main
+            dockerfilePath: ./backend/Dockerfile
+            dockerContext: ./backend
+            healthCheckPath: /health
+            autoDeployTrigger: checksPass
+            buildFilter:
+              paths:
+                - backend/**
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: APP_ENV
+                value: prod
+              - key: LOG_LEVEL
+                value: info
+              - key: MONGO_URI
+                sync: false
+              - key: JWT_SECRET
+                generateValue: true
+              - key: GATEWAY_URL
+                value: https://midou-exam1-prod-gateway.onrender.com
+              - key: CORS_ORIGIN
+                value: https://midou-exam1-prod-frontend.onrender.com
+              - key: NOTIFY_ADMIN_EMAIL
+                sync: false
+          - name: midou-exam1-prod-gateway
+            type: web
+            runtime: docker
+            plan: free
+            region: frankfurt
+            branch: main
+            dockerfilePath: ./gateway/Dockerfile
+            dockerContext: ./gateway
+            healthCheckPath: /health
+            autoDeployTrigger: checksPass
+            buildFilter:
+              paths:
+                - gateway/**
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: APP_ENV
+                value: prod
+              - key: LOG_LEVEL
+                value: info
+              - key: NOTIFI_SERVICE_URL
+                value: https://midou-exam1-prod-notifications.onrender.com
+              - key: STOCK_SERVICE_URL
+                value: https://midou-exam1-prod-stock-management.onrender.com
+          - name: midou-exam1-prod-notifications
+            type: web
+            runtime: docker
+            plan: free
+            region: frankfurt
+            branch: main
+            dockerfilePath: ./microservices/notifications/Dockerfile
+            dockerContext: ./microservices/notifications
+            healthCheckPath: /health
+            autoDeployTrigger: checksPass
+            buildFilter:
+              paths:
+                - microservices/notifications/**
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: APP_ENV
+                value: prod
+              - key: LOG_LEVEL
+                value: info
+              - key: EMAIL_USER
+                sync: false
+              - key: EMAIL_APPLICATION_PASSWORD
+                sync: false
+          - name: midou-exam1-prod-stock-management
+            type: web
+            runtime: docker
+            plan: free
+            region: frankfurt
+            branch: main
+            dockerfilePath: ./microservices/stock-management/Dockerfile
+            dockerContext: ./microservices/stock-management
+            healthCheckPath: /health
+            autoDeployTrigger: checksPass
+            buildFilter:
+              paths:
+                - microservices/stock-management/**
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: APP_ENV
+                value: prod
+              - key: LOG_LEVEL
+                value: info
