@@ -2,8 +2,9 @@
 node_modules/
 */node_modules/
 
-# Environnement
+# Environnement (aucun secret versionné)
 .env
+.env.*
 *.env*
 !.env.example
 
@@ -11,6 +12,7 @@ node_modules/
 docker-compose.override.yml
 
 # Logs
+logs/
 *.log
 
 # IDE
