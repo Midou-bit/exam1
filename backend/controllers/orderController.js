@@ -69,7 +69,7 @@ exports.createOrder = async (req, res) => {
         text: `Une commande a été créée avec succès pour les produits suivants : \n${orderDetails
           .map((item) => `Produit ID : ${item.productId}, Quantité : ${item.quantity}`)
           .join('\n')}`,
-      });
+      }, { timeout: 5000 }); // ne bloque jamais la commande (SMTP lent ou bloqué)
     } catch (error) {
       logger.warn('Erreur lors de l\'envoi de la notification', { error: error.message });
     }
