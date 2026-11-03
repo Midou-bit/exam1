@@ -1,9 +1,12 @@
 """Configuration automatique d'Uptime Kuma (compte, alertes ntfy, sondes, page de statut).
 
 Usage : monitoring/.venv/bin/python monitoring/setup_kuma.py
-Le mot de passe admin est lu dans ~/.exam1-secrets/atlas.env (UPTIME_KUMA_PASSWORD), jamais affiché.
+Mot de passe admin : variable KUMA_PASSWORD, sinon ~/.exam1-secrets/atlas.env (UPTIME_KUMA_PASSWORD),
+sinon saisi au clavier (getpass). Il n'est jamais affiché.
 Relançable : les éléments déjà présents (même nom / même slug) ne sont pas recréés.
 """
+import getpass
+import os
 from pathlib import Path
 
 from uptime_kuma_api import MonitorType, NotificationType, UptimeKumaApi
@@ -22,10 +25,14 @@ RETRIES = 2
 
 
 def read_password():
-    for line in SECRETS.read_text().splitlines():
-        if line.startswith("UPTIME_KUMA_PASSWORD="):
-            return line.split("=", 1)[1]
-    raise SystemExit("UPTIME_KUMA_PASSWORD absent de ~/.exam1-secrets/atlas.env")
+    """Mot de passe admin : KUMA_PASSWORD, sinon ~/.exam1-secrets/atlas.env, sinon saisie masquée."""
+    if os.environ.get("KUMA_PASSWORD"):
+        return os.environ["KUMA_PASSWORD"]
+    if SECRETS.exists():
+        for line in SECRETS.read_text().splitlines():
+            if line.startswith("UPTIME_KUMA_PASSWORD="):
+                return line.split("=", 1)[1]
+    return getpass.getpass("Mot de passe admin Uptime Kuma : ")
 
 
 def main():

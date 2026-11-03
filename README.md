@@ -25,10 +25,10 @@ Chaque service Node expose `GET /health`, utilisé par Render et Uptime Kuma. Po
 
 ## Environnements
 
-| Environnement | Branche | Frontend | Backend |
-|---|---|---|---|
+| Environnement | Branche   | Frontend                                          | Backend                                          |
+| ------------- | --------- | ------------------------------------------------- | ------------------------------------------------ |
 | Préproduction | `develop` | https://midou-exam1-preprod-frontend.onrender.com | https://midou-exam1-preprod-backend.onrender.com |
-| Production | `main` | https://midou-exam1-prod-frontend.onrender.com | https://midou-exam1-prod-backend.onrender.com |
+| Production    | `main`    | https://midou-exam1-prod-frontend.onrender.com    | https://midou-exam1-prod-backend.onrender.com    |
 
 Gateway et microservices : `https://midou-exam1-<env>-gateway.onrender.com`, `-notifications`, `-stock-management`.
 
@@ -86,7 +86,21 @@ Render déploie automatiquement `develop` en préproduction et `main` en product
 
 ## Supervision
 
-`monitoring/` contient Uptime Kuma (`docker compose -f monitoring/docker-compose.yml up -d`, interface sur http://localhost:3001) et `setup_kuma.py`, qui configure les sondes `/health` de la préprod et de la prod, les alertes ntfy et la page de statut `exam1`.
+Uptime Kuma sonde les `/health` de la préprod et de la prod, envoie les alertes sur ntfy (topic `midou-exam1-alertes`) et publie la page de statut `exam1`. Pour recréer la supervision sur n'importe quel poste :
+
+```bash
+# 1. Lancer Uptime Kuma (http://localhost:3001)
+docker compose -f monitoring/docker-compose.yml up -d
+
+# 2. Installer la librairie de configuration dans un environnement Python dédié
+python3 -m venv monitoring/.venv
+monitoring/.venv/bin/pip install uptime-kuma-api
+
+# 3. Configurer : compte admin, alerte ntfy, sondes, page de statut (relançable sans doublon)
+KUMA_PASSWORD='<mot de passe choisi>' monitoring/.venv/bin/python monitoring/setup_kuma.py
+```
+
+Le mot de passe admin est lu dans la variable `KUMA_PASSWORD`, sinon dans `~/.exam1-secrets/atlas.env` (`UPTIME_KUMA_PASSWORD`), sinon il est demandé au clavier. Au premier lancement, ce mot de passe sert à créer le compte `admin`. Pour recevoir les alertes, il suffit de s'abonner au topic ntfy (application mobile ou https://ntfy.sh/midou-exam1-alertes).
 
 ## Documentation
 
