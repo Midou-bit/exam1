@@ -272,6 +272,45 @@ cd backend
 
 Résultat : `Produits vérifiés {inserted: 5, total: 5}` et `Compte admin créé` sur chaque base ; vérification : `exam1_preprod | produits: 5 | admins: 1` et `exam1_prod | produits: 5 | admins: 1`.
 
+## Étape 13 — Supervision et alertes
+
+**Outil** : Uptime Kuma (image `louislam/uptime-kuma:1`). Il est décrit dans `monitoring/docker-compose.yml`, séparé du compose de l'application : conteneur `uptime-kuma`, port 3001, volume nommé `uptime-kuma-data`, `restart: unless-stopped`. La configuration est faite par le script `monitoring/setup_kuma.py` (librairie `uptime-kuma-api`), ce qui la rend reproductible et relançable.
+
+**Sondes**
+
+| Monitor | Type | Cible | Intervalle |
+|---|---|---|---|
+| `[PREPROD] backend`, `gateway`, `notifications`, `stock-management` | HTTP(S) keyword `"status":"ok"` | `https://midou-exam1-preprod-<service>.onrender.com/health` | 300 s |
+| `[PROD] backend`, `gateway`, `notifications`, `stock-management` | HTTP(S) keyword `"status":"ok"` | `https://midou-exam1-prod-<service>.onrender.com/health` | 120 s |
+| `[PREPROD] frontend`, `[PROD] frontend` | HTTP(S) + expiration TLS | `https://midou-exam1-<env>-frontend.onrender.com` | 300 s / 120 s |
+
+Réglages communs : timeout de 60 s, 2 nouvelles tentatives (espacées de 60 s) avant l'alerte. Les sondes sont rangées dans 2 groupes, `PREPROD` et `PROD`.
+
+**Pourquoi**
+- **Mot-clé plutôt que simple code HTTP** : le backend répond 503 si MongoDB est déconnecté, mais vérifier le contenu `"status":"ok"` garantit que l'application est réellement fonctionnelle, et pas seulement qu'un proxy répond.
+- **Prod plus fréquente** : une panne en production touche les utilisateurs et doit être détectée vite. La préprod tolère un délai plus long et consomme moins de quota.
+- **Timeout de 60 s et 2 tentatives** : un service Render gratuit endormi met environ une minute à redémarrer (cold start). Sans cette marge, chaque réveil déclencherait une fausse alerte.
+- **Certificat TLS** : alerte 14 jours avant l'expiration, pour anticiper une coupure HTTPS (Render renouvelle normalement le certificat automatiquement ; cette alerte en est le filet de sécurité).
+
+**Canal d'alerte** : notification ntfy (serveur `https://ntfy.sh`, topic `midou-exam1-alertes`), activée par défaut sur tous les monitors. On s'abonne au topic depuis l'application mobile ntfy ou sur https://ntfy.sh/midou-exam1-alertes. ntfy est gratuit et sans compte, et contrairement à l'email il n'est pas bloqué depuis Render.
+
+**Test d'alerte** : un monitor temporaire `[TEST]` a été créé sur `https://midou-exam1-prod-backend.onrender.com/route-inexistante` (mot-clé absent). Il est passé DOWN (« Request failed with status code 404 ») et la notification « [TEST] route inexistante Down » a bien été reçue sur ntfy. Le monitor a ensuite été supprimé.
+
+**Page de statut** : page publique `exam1` (http://localhost:3001/status/exam1), avec les groupes PREPROD et PROD.
+
+**Commandes**
+```bash
+docker compose -f monitoring/docker-compose.yml up -d
+python3 -m venv monitoring/.venv && monitoring/.venv/bin/pip install uptime-kuma-api
+monitoring/.venv/bin/python monitoring/setup_kuma.py    # mot de passe lu dans ~/.exam1-secrets/atlas.env
+curl -s "https://ntfy.sh/midou-exam1-alertes/json?poll=1&since=10m"   # vérifier les alertes reçues
+```
+
+**Limites**
+- Uptime Kuma tourne sur le poste de développement : si le poste est éteint, plus rien n'est supervisé. En production réelle, il faudrait une instance dédiée et toujours allumée (petit VPS ou service managé), elle-même surveillée depuis l'extérieur.
+- Les sondes régulières empêchent les services gratuits de s'endormir. Le quota de 750 h d'instance par mois pour tout le workspace est donc consommé en continu : 8 services éveillés l'épuisent en 4 jours environ. Pour une démonstration, ça passe ; ensuite, il faut mettre les monitors en pause ou espacer les intervalles.
+- La page de statut n'est publique que sur le réseau local, puisqu'elle est servie par l'instance du poste.
+
 ---
 
 ## Variables d'environnement par service
