@@ -10,6 +10,11 @@ const { logger } = require('../logger');
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8000';
 const NOTIFY_ADMIN_EMAIL = process.env.NOTIFY_ADMIN_EMAIL;
 
+// BUG-03 : remet en stock les quantités déjà décrémentées (échec en cours de commande)
+const restoreStock = (items) => Promise.all(
+  items.map(({ productId, quantity }) => Product.updateOne({ _id: productId }, { $inc: { stock: quantity } }))
+);
+
 
 exports.createOrder = async (req, res) => {
   //userLog(`user is ${JSON.stringify(req.user)}`)
@@ -67,6 +72,22 @@ exports.createOrder = async (req, res) => {
       0
     );
 
+    // BUG-03 : décrément atomique, uniquement si le stock est suffisant
+    const decremented = [];
+    for (const item of orderDetails) {
+      const updated = await Product.findOneAndUpdate(
+        { _id: item.productId, stock: { $gte: item.quantity } },
+        { $inc: { stock: -item.quantity } },
+        { new: true }
+      );
+      if (!updated) {
+        await restoreStock(decremented);
+        const { name } = productsById.get(String(item.productId));
+        return res.status(409).json({ message: `Stock insuffisant pour le produit « ${name} ».` });
+      }
+      decremented.push(item);
+    }
+
     const newOrder = new Order({
       userId,
       items: orderDetails,
@@ -76,8 +97,14 @@ exports.createOrder = async (req, res) => {
       shippingMethod
     });
 
-    // Sauvegarder la commande dans la base de données
-    const savedOrder = await newOrder.save();
+    // Sauvegarder la commande dans la base de données (stock rétabli en cas d'échec)
+    let savedOrder;
+    try {
+      savedOrder = await newOrder.save();
+    } catch (error) {
+      await restoreStock(decremented);
+      throw error;
+    }
 
     logger.info('Commande sauvegardée', { orderId: savedOrder._id, total: savedOrder.total });
 

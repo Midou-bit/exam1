@@ -72,7 +72,8 @@ const Order = () => {
       alert("Commande confirmée avec succès !");
     } catch (error) {
       console.error("Erreur lors de la commande", error);
-      alert("Une erreur technique est survenue. Veuillez réessayer.");
+      // Message du serveur si disponible (ex. stock insuffisant)
+      alert(error.response?.data?.message || "Une erreur technique est survenue. Veuillez réessayer.");
     }
   };
 
