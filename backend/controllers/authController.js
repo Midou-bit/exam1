@@ -36,12 +36,12 @@ exports.register = async (req, res, next) => {
   logger.debug('Tentative d\'inscription', { username });
 
   try {
-    // Vérifier si l'email ou le nom d'utilisateur existe déjà
-    const existingUser = await User.findOne({ email });
+    // BUG-05 : email ou nom d'utilisateur déjà utilisé → 409
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     
     if (existingUser) {
-      logger.warn('Inscription refusée : email déjà utilisé', { username });
-      return res.status(400).json({ message: 'Cet email est déjà utilisé.' });
+      logger.warn('Inscription refusée : email ou nom d\'utilisateur déjà utilisé', { username });
+      return res.status(409).json({ message: 'Cet email ou ce nom d\'utilisateur est déjà utilisé.' });
     }
 
     // Créer un nouvel utilisateur
@@ -65,6 +65,10 @@ exports.register = async (req, res, next) => {
 
     res.status(201).json({ message: 'Utilisateur créé avec succès.' });
   } catch (error) {
+    // Inscriptions simultanées : l'index unique de Mongo signale le doublon
+    if (error.code === 11000) {
+      return res.status(409).json({ message: 'Cet email ou ce nom d\'utilisateur est déjà utilisé.' });
+    }
     logger.error('Erreur lors de l\'inscription', { error: error.message });
     next(error);
   }
